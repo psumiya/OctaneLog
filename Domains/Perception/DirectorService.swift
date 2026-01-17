@@ -1,23 +1,23 @@
 import Foundation
 import CoreGraphics
-import SwiftUI
+import Observation
 
 /// The "Director" of the show.
 /// Responsible for analyzing the video feed and deciding what to capture.
 @Observable
-class DirectorService {
+public class DirectorService {
     private let videoSource: VideoSourceProtocol
     
     // Live Diagnostics for UI
-    var isRunning = false
-    var frameCount = 0
-    var lastFrame: CGImage? // For UI Preview
+    public var isRunning = false
+    public var frameCount = 0
+    public var lastFrame: CGImage? // For UI Preview
     
-    init(videoSource: VideoSourceProtocol = LocalCameraSource()) {
+    public init(videoSource: VideoSourceProtocol = LocalCameraSource()) {
         self.videoSource = videoSource
     }
     
-    func startSession() async {
+    public func startSession() async {
         do {
             print("Director: Preparing Session...")
             try await videoSource.prepare()
@@ -33,7 +33,7 @@ class DirectorService {
         }
     }
     
-    func stopSession() {
+    public func stopSession() {
         videoSource.stop()
         self.isRunning = false
     }

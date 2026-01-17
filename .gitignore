@@ -17,6 +17,7 @@ DerivedData/
 
 # Swift Package Manager
 .build/
+.swiftpm/
 
 # CocoaPods
 Pods/

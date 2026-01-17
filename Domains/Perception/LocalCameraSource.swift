@@ -1,12 +1,12 @@
 import AVFoundation
 import CoreImage
 import CoreGraphics
-import UIKit
+
 
 /// MVP Implementation of VideoSourceProtocol using the iPhone's Camera.
-class LocalCameraSource: NSObject, VideoSourceProtocol {
+public class LocalCameraSource: NSObject, VideoSourceProtocol {
     
-    var frameStream: AsyncStream<CGImage> {
+    public var frameStream: AsyncStream<CGImage> {
         AsyncStream { continuation in
             self.frameContinuation = continuation
         }
@@ -17,11 +17,11 @@ class LocalCameraSource: NSObject, VideoSourceProtocol {
     private let sessionQueue = DispatchQueue(label: "com.octanelog.cameraQueue")
     private var isAuthorized = false
     
-    override init() {
+    public override init() {
         super.init()
     }
     
-    func prepare() async throws {
+    public func prepare() async throws {
         // 1. Check Permissions
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         switch status {
@@ -43,7 +43,7 @@ class LocalCameraSource: NSObject, VideoSourceProtocol {
         }
     }
     
-    func start() async {
+    public func start() async {
         guard isAuthorized else { return }
         sessionQueue.async { [weak self] in
             guard let self = self, !self.captureSession.isRunning else { return }
@@ -51,7 +51,7 @@ class LocalCameraSource: NSObject, VideoSourceProtocol {
         }
     }
     
-    func stop() {
+    public func stop() {
         sessionQueue.async { [weak self] in
             guard let self = self, self.captureSession.isRunning else { return }
             self.captureSession.stopRunning()
@@ -114,6 +114,6 @@ extension LocalCameraSource: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 }
 
-enum CameraError: Error {
+public enum CameraError: Error {
     case unauthorized
 }

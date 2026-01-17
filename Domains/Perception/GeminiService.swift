@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import GoogleGenerativeAI
 
 /// Service responsible for interacting with the Google Gemini ecosystem.
