@@ -9,6 +9,7 @@ public struct CockpitView: View {
     }
     
     public var body: some View {
+        ZStack {
             // 1. Live Viewfinder
             if let frame = director.lastFrame {
                 Image(decorative: frame, scale: 1.0, orientation: .up)
