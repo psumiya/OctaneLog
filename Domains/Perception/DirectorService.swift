@@ -13,8 +13,16 @@ public class DirectorService {
     public var frameCount = 0
     public var lastFrame: CGImage? // For UI Preview
     
-    public init(videoSource: VideoSourceProtocol = LocalCameraSource()) {
-        self.videoSource = videoSource
+    public init(videoSource: VideoSourceProtocol? = nil) {
+        if let source = videoSource {
+            self.videoSource = source
+        } else {
+            #if targetEnvironment(simulator)
+            self.videoSource = MockCameraSource()
+            #else
+            self.videoSource = LocalCameraSource()
+            #endif
+        }
     }
     
     public func startSession() async {
