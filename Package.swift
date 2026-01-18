@@ -14,6 +14,9 @@ let package = Package(
         .library(
             name: "OctaneLogCore",
             targets: ["OctaneLogCore"]),
+        .executable(
+            name: "OctaneLogApp",
+            targets: ["OctaneLogApp"])
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -30,6 +33,11 @@ let package = Package(
             path: ".",
             exclude: ["App", "Resources", "README.md", "Package.swift"],
             sources: ["Core", "Domains", "Features"]
+        ),
+        .executableTarget(
+            name: "OctaneLogApp",
+            dependencies: ["OctaneLogCore"],
+            path: "App"
         ),
         .testTarget(
             name: "OctaneLogTests",

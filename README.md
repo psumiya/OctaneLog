@@ -49,8 +49,18 @@ swift test
 3. The **Canvas** (preview pane) should appear on the right. If not, press `Option + Command + Enter`.
 4. You will see the "Heads-Up Display" UI in the preview.
 
-### Option 3: Run on Device
-To run the full app with camera access:
-1. In Xcode, ensure the scheme (top bar) is set to `OctaneLogApp` (if available) or create a new App target referencing this package. 
-2. *Note: Since this project is a Swift Package, the easiest way to run it as an App is to generate an Xcode Project not provided here, or rely on Previews.*
+### Option 3: Run on Device (Detailed)
+### Option 3: Run on Device (Simplified)
+Because we configured an "Executable Target" in the package, you can run it directly:
+
+1.  **Open Project**:
+    ```bash
+    open Package.swift
+    ```
+2.  **Select Target**:
+    -   In the top bar (Scheme selector), confirm **OctaneLogApp** is selected.
+    -   Select your **iPhone** as the destination.
+3.  **Run**:
+    -   Press **Run** (Play icon).
+    -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted, usually "Personal Team" works automatically).
 
