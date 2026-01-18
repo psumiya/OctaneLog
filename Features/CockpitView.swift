@@ -97,7 +97,9 @@ public struct CockpitView: View {
             }
         }
         .onAppear {
+            print("🚀 CockpitView APPEARED")
             Task {
+                print("🎬 Director Starting Session...")
                 await director.startSession()
             }
         }
