@@ -9,16 +9,13 @@ public struct CockpitView: View {
     }
     
     public var body: some View {
-        ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
             // 1. Live Viewfinder
             if let frame = director.lastFrame {
                 Image(decorative: frame, scale: 1.0, orientation: .up)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .edgesIgnoringSafeArea(.all)
-                    .overlay(Color.black.opacity(0.2)) // Cinematic dims
+                    .edgesIgnoringSafeArea(.all) // Background ignores safe area
+                    .overlay(Color.black.opacity(0.2))
             } else {
                 VStack {
                     Image(systemName: "video.slash")
@@ -28,6 +25,9 @@ public struct CockpitView: View {
                         .font(.caption)
                         .tracking(2.0)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black)
+                .edgesIgnoringSafeArea(.all) // Placeholder ignores safe area
                 .foregroundColor(.gray)
             }
             
@@ -95,6 +95,7 @@ public struct CockpitView: View {
                 .padding()
                 .background(LinearGradient(gradient: Gradient(colors: [.clear, .black.opacity(0.8)]), startPoint: .top, endPoint: .bottom))
             }
+            // HUD now respects Safe Area by default because we removed it from ZStack parent
         }
         .onAppear {
             print("🚀 CockpitView APPEARED")
