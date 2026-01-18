@@ -32,3 +32,25 @@
 2. Configure `GEMINI_API_KEY` in `GeminiService.swift` or environment.
 3. Run `swift build` or build the `OctaneLogCore` scheme in Xcode.
 
+## How to Test and Run
+
+### Option 1: Quick Verification (CLI)
+If you don't want to open Xcode, you can confirm the code works by running the unit tests:
+```bash
+swift test
+```
+
+### Option 2: Visual Preview (Xcode)
+1. Open the folder in Xcode:
+   ```bash
+   open Package.swift
+   ```
+2. In the Project Navigator (left sidebar), go to `Features` -> `CockpitView.swift`.
+3. The **Canvas** (preview pane) should appear on the right. If not, press `Option + Command + Enter`.
+4. You will see the "Heads-Up Display" UI in the preview.
+
+### Option 3: Run on Device
+To run the full app with camera access:
+1. In Xcode, ensure the scheme (top bar) is set to `OctaneLogApp` (if available) or create a new App target referencing this package. 
+2. *Note: Since this project is a Swift Package, the easiest way to run it as an App is to generate an Xcode Project not provided here, or rely on Previews.*
+

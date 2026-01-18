@@ -106,3 +106,9 @@ public struct CockpitView: View {
         }
     }
 }
+
+struct CockpitView_Previews: PreviewProvider {
+    static var previews: some View {
+        CockpitView(director: DirectorService(videoSource: MockCameraSource()))
+    }
+}

@@ -98,7 +98,7 @@ public class LocalCameraSource: NSObject, VideoSourceProtocol {
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 extension LocalCameraSource: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let nav = self.frameContinuation else { return }
         
         // Convert CMSampleBuffer to CGImage
