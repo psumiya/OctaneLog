@@ -1,6 +1,7 @@
 import SwiftUI
 import OctaneLogCore
 
+@main
 struct OctaneLogApp: App {
     @State private var director = DirectorService()
     
@@ -10,5 +11,3 @@ struct OctaneLogApp: App {
         }
     }
 }
-
-OctaneLogApp.main()
