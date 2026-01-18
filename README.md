@@ -50,18 +50,34 @@ swift test
 4. You will see the "Heads-Up Display" UI in the preview.
 
 ### Option 3: Run on Device (Detailed)
-### Option 3: Run on Device (Simplified)
-Because we configured an "Executable Target" in the package, you can run it directly:
+### Run on Simulator or Device
+Because this is a **Swift Package Logic Library**, you must create a standard Xcode "Host App" to run it visually.
 
-1.  **Open Project**:
-    ```bash
-    open Package.swift
+1.  **Create App**:
+    -   Xcode -> **File > New > Project** -> **iOS App**.
+    -   Name it `OctaneRunner`.
+    -   Save it next to this folder.
+
+2.  **Add Package**:
+    -   Type `OctaneLog` in the search bar (if it appears locally) OR just drag the `OctaneLog` folder into your new project's file list.
+    -   Add `OctaneLogCore` framework to your App Target's "Frameworks, Libraries, and Embedded Content".
+
+3.  **App Code**:
+    -   Replace the contents of `OctaneRunnerApp.swift` with:
+    ```swift
+    import SwiftUI
+    import OctaneLogCore
+
+    @main
+    struct OctaneRunnerApp: App {
+        @State var director = DirectorService()
+        var body: some Scene {
+            WindowGroup {
+                CockpitView(director: director)
+            }
+        }
+    }
     ```
-2.  **Select Target**:
-    -   In the top bar (Scheme selector), look for **OctaneLogApp** (icon is a little package box or building block).
-    -   Select your **iPhone** or a **Simulator** (e.g., iPhone 15 Pro) as the destination.
-3.  **Run**:
-    -   Press **Run** (Play icon).
-    -   If running on Simulator, look for the app named **OctaneLogApp** on the home screen.
+4.  **Run**: Hit Play. This works 100% of the time.
     -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted, usually "Personal Team" works automatically).
 
