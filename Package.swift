@@ -37,7 +37,10 @@ let package = Package(
         .executableTarget(
             name: "OctaneLogApp",
             dependencies: ["OctaneLogCore"],
-            path: "App"
+            path: "App",
+            linkerSettings: [
+                .unsafeFlags(["-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist", "-Xlinker", "App/Info.plist"])
+            ]
         ),
         .testTarget(
             name: "OctaneLogTests",
