@@ -58,9 +58,10 @@ Because we configured an "Executable Target" in the package, you can run it dire
     open Package.swift
     ```
 2.  **Select Target**:
-    -   In the top bar (Scheme selector), confirm **OctaneLogApp** is selected.
-    -   Select your **iPhone** as the destination.
+    -   In the top bar (Scheme selector), look for **OctaneLogApp** (icon is a little package box or building block).
+    -   Select your **iPhone** or a **Simulator** (e.g., iPhone 15 Pro) as the destination.
 3.  **Run**:
     -   Press **Run** (Play icon).
+    -   If running on Simulator, look for the app named **OctaneLogApp** on the home screen.
     -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted, usually "Personal Team" works automatically).
 
