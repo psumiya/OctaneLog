@@ -7,7 +7,7 @@ struct OctaneLogApp: App {
     
     var body: some Scene {
         WindowGroup {
-            CockpitView(director: director)
+            RootView(director: director)
                 .onAppear { print("📱 WindowGroup visible") }
         }
     }

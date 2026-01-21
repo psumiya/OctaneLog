@@ -64,4 +64,26 @@ public class DirectorService {
             }
         }
     }
+    /// Captures the current frame as JPEG Data.
+    public func snapshot() -> Data? {
+        guard let cgImage = self.lastFrame else { return nil }
+        
+        #if os(macOS)
+        let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
+        return bitmapRep.representation(using: .jpeg, properties: [:])
+        #else
+        // iOS / iPadOS approach using UIKit
+        // We need to import UIKit conditionally if not available, but 'Foundation' + 'CoreGraphics' is usually enough for data,
+        // however UIImage is the easiest utility. We will assume UIKit is available on iOS.
+        // If we want to be pure, we use ImageIO.
+        let uiImage = UIImage(cgImage: cgImage)
+        return uiImage.jpegData(compressionQuality: 0.8)
+        #endif
+    }
 }
+
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif

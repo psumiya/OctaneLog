@@ -3,6 +3,9 @@ import SwiftUI
 
 public struct CockpitView: View {
     @State var director: DirectorService
+    @State private var gemini = GeminiService()
+    @State private var lastAnalysis: String?
+    @State private var isAnalyzing = false
     
     public init(director: DirectorService) {
         self.director = director
@@ -69,6 +72,29 @@ public struct CockpitView: View {
                 .padding()
                 .background(LinearGradient(gradient: Gradient(colors: [.black.opacity(0.8), .clear]), startPoint: .top, endPoint: .bottom))
                 
+                // Analysis Overlay
+                if let analysis = lastAnalysis {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("GEMINI VISION")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.yellow)
+                            Text(analysis)
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .shadow(radius: 2)
+                        }
+                        .padding()
+                        .background(Color.black.opacity(0.6))
+                        .cornerRadius(8)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
                 Spacer()
                 
                 // Bottom stats
@@ -81,6 +107,26 @@ public struct CockpitView: View {
                             .font(.system(.title3, design: .monospaced))
                             .foregroundColor(.green)
                     }
+                    
+                    Spacer()
+                    
+                    // AI Trigger Button
+                    Button(action: {
+                        analyzeFrame()
+                    }) {
+                        VStack {
+                            Image(systemName: isAnalyzing ? "brain.head.profile.fill" : "brain.head.profile")
+                                .font(.title)
+                                .foregroundColor(isAnalyzing ? .yellow : .white)
+                            Text(isAnalyzing ? "ANALYZING" : "ANALYZE")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+                        .padding()
+                        .background(Circle().fill(Color.white.opacity(0.1)))
+                    }
+                    .disabled(isAnalyzing)
                     
                     Spacer()
                     
@@ -107,6 +153,35 @@ public struct CockpitView: View {
         }
         .onDisappear {
             director.stopSession()
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func analyzeFrame() {
+        guard let data = director.snapshot() else {
+            print("❌ No frame to analyze")
+            return
+        }
+        
+        isAnalyzing = true
+        lastAnalysis = "Capturing..."
+        
+        Task {
+            do {
+                let description = try await gemini.generateDescription(from: data)
+                await MainActor.run {
+                    withAnimation {
+                        self.lastAnalysis = description
+                        self.isAnalyzing = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.lastAnalysis = "Error: Check API Key"
+                    self.isAnalyzing = false
+                }
+            }
         }
     }
 }

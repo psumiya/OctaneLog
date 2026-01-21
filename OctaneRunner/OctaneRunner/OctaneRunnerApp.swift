@@ -12,7 +12,7 @@ struct OctaneRunnerApp: App {
     @State var director = DirectorService()
     var body: some Scene {
         WindowGroup {
-            CockpitView(director: director)
+            RootView(director: director)
         }
     }
 }

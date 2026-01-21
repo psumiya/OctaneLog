@@ -9,16 +9,12 @@ public class GeminiService {
     
     // MARK: - Properties
     
-    // We'll use a hardcoded placeholder for now, but in production this should be in an uncached Config file or Keychain.
-    private var apiKey: String = "" 
+    private var apiKey: String = ""
     private var client: GenerativeModel?
     
     // MARK: - Initialization
     
     public init() {
-        // Attempt to load API Key from environment or configuration
-        // For MVP, we'll check an Environment Variable or allow injection later
-        // In a real app, use `Bundle.main.object(forInfoDictionaryKey:)` or similar
         if let key = ProcessInfo.processInfo.environment["GEMINI_API_KEY"], !key.isEmpty {
             self.configure(with: key)
         }
@@ -28,10 +24,10 @@ public class GeminiService {
     
     public func configure(with apiKey: String) {
         self.apiKey = apiKey
-        // Initialize the model. Defaulting to Gemini 1.5 Flash (latest stable as of early 2025 in this context)
-        // or "gemini-pro" depending on needs. Adjust model name as "gemini-1.5-flash" or similar.
-        self.client = GenerativeModel(name: "gemini-1.5-flash", apiKey: apiKey)
-        print("GeminiService: Configured with API Key.")
+        // Using "gemini-2.5-flash" as discovered from the user's API capabilities.
+        // This is a multimodal model capable of both text and vision.
+        self.client = GenerativeModel(name: "gemini-2.5-flash", apiKey: apiKey)
+        print("GeminiService: Configured with API Key (Using gemini-2.5-flash).")
     }
     
     // MARK: - Core Features
@@ -46,12 +42,38 @@ public class GeminiService {
             let response = try await client.generateContent(prompt)
             return response.text ?? "No text generated."
         } catch {
-            print("GeminiService Error: \(error)")
+            print("GeminiService Text Error: \(error)")
             throw error
         }
     }
     
-    // Additional methods for image inputs will go here.
+    /// Generates a description for the provided image data (JPEG/PNG).
+    public func generateDescription(from imageData: Data) async throws -> String {
+        guard let client = client else {
+            throw GeminiError.notConfigured
+        }
+        
+        do {
+            let prompt = "Describe what you see in this image in one brief sentence."
+            
+            // gemini-2.5-flash is multimodal.
+            // We pass [prompt, image_data]
+            let contentStream = client.generateContentStream(prompt, ModelContent.Part.jpeg(imageData))
+            
+            var fullText = ""
+            for try await chunk in contentStream {
+                if let text = chunk.text {
+                    fullText += text
+                }
+            }
+            
+            return fullText.isEmpty ? "No description generated." : fullText
+            
+        } catch {
+            print("GeminiService Vision Error: \(error)")
+            throw error
+        }
+    }
 }
 
 public enum GeminiError: Error {

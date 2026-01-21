@@ -17,7 +17,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/google/generative-ai-swift", from: "0.4.0")
+        .package(url: "https://github.com/google/generative-ai-swift", from: "0.5.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,7 +28,7 @@ let package = Package(
                 .product(name: "GoogleGenerativeAI", package: "generative-ai-swift")
             ],
             path: ".",
-            exclude: ["App", "Resources", "README.md", "Package.swift"],
+            exclude: ["App", "Resources", "README.md", "Package.swift", "OctaneRunner", "Tests", "Verification"],
             sources: ["Core", "Domains", "Features"]
         ),
         .testTarget(
@@ -36,5 +36,10 @@ let package = Package(
             dependencies: ["OctaneLogCore"],
             path: "Tests"
         ),
+        .executableTarget(
+            name: "Verification",
+            dependencies: ["OctaneLogCore"],
+            path: "Verification"
+        )
     ]
 )
