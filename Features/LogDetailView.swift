@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LogDetailView: View {
-    let index: Int
+    let episode: Episode
     
     var body: some View {
         ScrollView {
@@ -29,13 +29,27 @@ struct LogDetailView: View {
                 
                 // Transcript / Summary
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("AI SUMMARY")
+                    Text("AI FIELD LOG")
                         .font(.headline)
                         .foregroundColor(.yellow)
                     
-                    Text("This drive included a scenic route along PCH. Moderate traffic was encountered near Santa Monica. Total stop time: 4 minutes.")
+                    Text(episode.summary)
                         .foregroundColor(.white.opacity(0.8))
                         .font(.body)
+                    
+                    if !episode.tags.isEmpty {
+                        Divider().background(Color.gray)
+                        HStack {
+                            ForEach(episode.tags, id: \.self) { tag in
+                                Text("#\(tag)")
+                                    .font(.caption)
+                                    .padding(4)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(4)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
                 }
                 .padding()
                 .background(Color.white.opacity(0.05))
@@ -46,7 +60,7 @@ struct LogDetailView: View {
             .padding()
         }
         .background(Color.black.edgesIgnoringSafeArea(.all))
-        .navigationTitle("Log #00\(index + 1)")
+        .navigationTitle(episode.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif

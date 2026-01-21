@@ -7,8 +7,11 @@ public struct CockpitView: View {
     @State private var lastAnalysis: String?
     @State private var isAnalyzing = false
     
-    public init(director: DirectorService) {
+    var onEndDrive: (([String]) -> Void)?
+    
+    public init(director: DirectorService, onEndDrive: (([String]) -> Void)? = nil) {
         self.director = director
+        self.onEndDrive = onEndDrive
     }
     
     public var body: some View {
@@ -110,23 +113,43 @@ public struct CockpitView: View {
                     
                     Spacer()
                     
-                    // AI Trigger Button
-                    Button(action: {
-                        analyzeFrame()
-                    }) {
-                        VStack {
-                            Image(systemName: isAnalyzing ? "brain.head.profile.fill" : "brain.head.profile")
-                                .font(.title)
-                                .foregroundColor(isAnalyzing ? .yellow : .white)
-                            Text(isAnalyzing ? "ANALYZING" : "ANALYZE")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
+                    // Center Controls
+                    HStack(spacing: 20) {
+                        // AI Trigger Button
+                        Button(action: {
+                            analyzeFrame()
+                        }) {
+                            VStack {
+                                Image(systemName: isAnalyzing ? "brain.head.profile.fill" : "brain.head.profile")
+                                    .font(.title)
+                                    .foregroundColor(isAnalyzing ? .yellow : .white)
+                                Text(isAnalyzing ? "ANALYZING" : "ANALYZE")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 80, height: 80)
+                            .background(Circle().fill(Color.white.opacity(0.1)))
                         }
-                        .padding()
-                        .background(Circle().fill(Color.white.opacity(0.1)))
+                        .disabled(isAnalyzing)
+                        
+                        // End Drive Button
+                        Button(action: {
+                            finishDrive()
+                        }) {
+                            VStack {
+                                Image(systemName: "stop.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.red)
+                                Text("END DRIVE")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                            }
+                            .frame(width: 80, height: 80)
+                            .background(Circle().fill(Color.white.opacity(0.1)))
+                        }
                     }
-                    .disabled(isAnalyzing)
                     
                     Spacer()
                     
@@ -174,6 +197,8 @@ public struct CockpitView: View {
                     withAnimation {
                         self.lastAnalysis = description
                         self.isAnalyzing = false
+                        // LOG EVENT FOR NARRATIVE
+                        self.director.logEvent(description)
                     }
                 }
             } catch {
@@ -183,6 +208,11 @@ public struct CockpitView: View {
                 }
             }
         }
+    }
+    
+    private func finishDrive() {
+        let events = director.finishDrive()
+        onEndDrive?(events)
     }
 }
 

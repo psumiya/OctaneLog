@@ -10,6 +10,8 @@
     <string>1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>OctaneLog uses your location to adjust video capture frequency based on your speed.</string>
     <key>UILaunchScreen</key>
     <dict/>
 </dict>

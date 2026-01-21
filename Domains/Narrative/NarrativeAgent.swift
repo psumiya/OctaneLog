@@ -45,16 +45,22 @@ public actor NarrativeAgent {
     
     private func generateNarrative(events: [String], season: SeasonArc) async -> String {
         let prompt = """
-        You are the Showrunner for a TV series called '\(season.title)'.
+        You are a Field Logger creating a concise travel log called '\(season.title)'.
         The Theme is: \(season.theme).
         
-        Previous context: The user has met these recurring characters/places: \(season.recurringCharacters.joined(separator: ", ")).
+        Previous context: \(season.recurringCharacters.joined(separator: ", ")).
         
-        New Footage (Events):
+        New Events (Sequential):
         \(events.map { "- \($0)" }.joined(separator: "\n"))
         
-        Task: Write a short, engaging episode synopsis (max 3 sentences).
-        Crucially, if a recurring character appears, reference the shared history.
+        Task: Write a summary that strictly follows the sequence of events.
+        
+        STRICT RULES:
+        1. NO DRAMA. Do NOT use words like "journey", "embrace", "canvas", "unseen", "profound".
+        2. FACTS ONLY. State what happened. Do not speculate on feelings or "what could be".
+        3. CAUSALITY: Show how one event led to the next (e.g., "After stopping at X, traffic slowed down at Y").
+        4. TONE: Dry, concise, observant. Like a pilot's log or a dashcam timestamp description.
+        5. LENGTH: Maximum 3 sentences.
         """
         
         ThoughtLogger.log(step: "Prompt Engineering", content: "Constructed prompt with \(season.episodes.count) episodes of history.")
@@ -64,7 +70,7 @@ public actor NarrativeAgent {
             return try await geminiService.generateText(prompt: prompt)
         } catch {
             ThoughtLogger.logDecision(topic: "API Failure", decision: "Fallback to offline generator", reasoning: "Gemini API unavailable or key missing.")
-            return "Offline Mode: You drove around. (Add API Key for the real magic)."
+            return "Offline Mode: Just another day on the asphalt. (Check API Key for the full story)."
         }
     }
     

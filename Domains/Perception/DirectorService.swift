@@ -7,6 +7,7 @@ import Observation
 @Observable
 public class DirectorService {
     private let videoSource: VideoSourceProtocol
+    public let locationService = LocationService()
     
     // Live Diagnostics for UI
     public var isRunning = false
@@ -30,6 +31,10 @@ public class DirectorService {
             print("Director: Preparing Session...")
             try await videoSource.prepare()
             
+            // Start Location Monitoring
+            self.locationService.requestPermission() 
+            self.locationService.startMonitoring()
+            
             print("Director: Starting Camera...")
             await videoSource.start()
             
@@ -43,6 +48,7 @@ public class DirectorService {
     
     public func stopSession() {
         videoSource.stop()
+        locationService.stopMonitoring()
         self.isRunning = false
     }
     
@@ -53,16 +59,79 @@ public class DirectorService {
                 // Main Thread Update for UI Preview
                 await MainActor.run {
                     self.frameCount += 1
+                    
                     // Throttle preview updates to 10fps to save UI resources
                     if self.frameCount % 3 == 0 {
                         self.lastFrame = frame
                     }
+                    
+                    // Dynamic AI Analysis
+                    self.analyzeFrameIfNeeded(frame)
                 }
-                
-                // TODO: AI Analysis logic will go here
-                // if self.frameCount % 30 == 0 { analyze(frame) }
             }
         }
+    }
+    
+    // MARK: - Smart Capture Logic
+    // MARK: - Smart Capture Logic
+    private var lastAnalysisTime: Date = Date.distantPast
+    private let privacyService = PrivacyService()
+
+    private func analyzeFrameIfNeeded(_ frame: CGImage) {
+        let now = Date()
+        let interval = self.getAnalysisInterval()
+        
+        guard now.timeIntervalSince(lastAnalysisTime) >= interval else { return }
+        
+        // Update timestamp immediately to prevent double-firing
+        self.lastAnalysisTime = now
+        
+        // Don't analyze if we are effectively off
+        if interval == .infinity { return }
+        
+        // Check for special "Stationary Check" (optional, for now we just respect the interval)
+         print("Director: Triggering Analysis at Speed: \(locationService.currentSpeed) mph (State: \(locationService.driveState.rawValue))")
+        
+        Task {
+            // Level 2 Privacy: On-Device Redaction
+            guard let sanitizedData = await privacyService.scrub(image: frame) else {
+                print("Director: Privacy Scrubbing Failed. Aborting upload.")
+                return
+            }
+            
+            // In a real app, we would fire the snapshot to Gemini here using sanitizedData.
+            // For MVP, we just log a simulated event so we can verify the logic.
+            await MainActor.run {
+                self.logEvent("Auto-Capture [\(locationService.driveState.rawValue)] - Privacy Scrubbed (\(sanitizedData.count) bytes)")
+            }
+        }
+    }
+    
+    private func getAnalysisInterval() -> TimeInterval {
+        switch locationService.driveState {
+        case .stationary:
+            return 120.0 // 2 minutes
+        case .crawling:
+            return 45.0 // 45 seconds
+        case .cruising:
+            return 15.0 // 15 seconds
+        }
+    }
+    
+    // MARK: - Event Logging (Narrative Source)
+    public var events: [String] = []
+    
+    public func logEvent(_ description: String) {
+        let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
+        self.events.append("[\(timestamp)] \(description)")
+        print("Director: Event Logged -> \(description)")
+    }
+    
+    /// Returns collected events and clears the buffer.
+    public func finishDrive() -> [String] {
+        let capturedEvents = self.events
+        self.events.removeAll()
+        return capturedEvents
     }
     /// Captures the current frame as JPEG Data.
     public func snapshot() -> Data? {

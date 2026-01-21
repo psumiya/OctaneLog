@@ -10,9 +10,11 @@ import OctaneLogCore
 @main
 struct OctaneRunnerApp: App {
     @State var director = DirectorService()
+    let narrativeAgent = NarrativeAgent() // The Showrunner
+    
     var body: some Scene {
         WindowGroup {
-            RootView(director: director)
+            RootView(director: director, narrativeAgent: narrativeAgent)
         }
     }
 }
