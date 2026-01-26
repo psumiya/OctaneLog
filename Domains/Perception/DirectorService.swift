@@ -76,6 +76,9 @@ public class DirectorService {
     // MARK: - Smart Capture Logic
     private var lastAnalysisTime: Date = Date.distantPast
     private let privacyService = PrivacyService()
+    
+    // Using FrameUploadQueue to handle uploads sequentially
+    private let uploadQueue = FrameUploadQueue(geminiService: GeminiService())
 
     private func analyzeFrameIfNeeded(_ frame: CGImage) {
         let now = Date()
@@ -100,9 +103,16 @@ public class DirectorService {
             }
             
             // In a real app, we would fire the snapshot to Gemini here using sanitizedData.
-            // For MVP, we just log a simulated event so we can verify the logic.
+            // We now send it to the queue which handles the upload.
+            let currentLocation = self.locationService.lastLocation
+            await uploadQueue.enqueue(frame: sanitizedData, location: currentLocation)
+            
             await MainActor.run {
-                self.logEvent("Auto-Capture [\(locationService.driveState.rawValue)] - Privacy Scrubbed (\(sanitizedData.count) bytes)")
+                var logMsg = "Enqueued [\(locationService.driveState.rawValue)] - \(sanitizedData.count) bytes"
+                if let loc = currentLocation {
+                    logMsg += " @ \(loc.coordinate.latitude),\(loc.coordinate.longitude)"
+                }
+                self.logEvent(logMsg)
             }
         }
     }

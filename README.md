@@ -81,3 +81,16 @@ Because this is a **Swift Package Logic Library**, you must create a standard Xc
 4.  **Run**: Hit Play. This works 100% of the time.
     -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted, usually "Personal Team" works automatically).
 
+### Troubleshooting
+
+**"Untrusted Developer" Error**:
+1. Open **Settings** on your iPhone.
+2. Go to **General** -> **VPN & Device Management**.
+3. Under "Developer App", tap your email/Apple ID.
+4. Tap **Trust**.
+
+**"Developer Mode Required" Error**:
+1. Open **Settings** -> **Privacy & Security**.
+2. Scroll to **Developer Mode** and enable it.
+3. Restart your iPhone.
+

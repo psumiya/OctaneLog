@@ -15,11 +15,15 @@ public actor SeasonManager {
     
     /// Loads the current season state or creates a new one if it doesn't exist.
     public func loadSeason() async -> SeasonArc {
+        print("SeasonManager: loadSeason called")
         do {
             let data = try Data(contentsOf: fileURL)
+            print("SeasonManager: File data read. Size: \(data.count) bytes")
             let season = try JSONDecoder().decode(SeasonArc.self, from: data)
+            print("SeasonManager: Decoded season successfully.")
             return season
         } catch {
+            print("SeasonManager: Failed to load (Error: \(error)). Creating new season.")
             // Start a new season if none exists
             let newSeason = SeasonArc(
                 id: UUID(),
@@ -40,6 +44,26 @@ public actor SeasonManager {
             try data.write(to: fileURL)
         } catch {
             print("Failed to save Season Arc: \(error)")
+        }
+    }
+    
+    /// Deletes a single episode by its ID.
+    public func deleteEpisode(id: UUID) async {
+        var season = await loadSeason()
+        if let index = season.episodes.firstIndex(where: { $0.id == id }) {
+            season.episodes.remove(at: index)
+            await saveSeason(season)
+        }
+    }
+    
+    /// Deletes multiple episodes by their IDs.
+    public func deleteEpisodes(ids: Set<UUID>) async {
+        var season = await loadSeason()
+        let originalCount = season.episodes.count
+        season.episodes.removeAll { ids.contains($0.id) }
+        
+        if season.episodes.count != originalCount {
+            await saveSeason(season)
         }
     }
 }

@@ -27,6 +27,11 @@ public struct RootView: View {
                 .tabItem {
                     Label("Garage", systemImage: "car.fill")
                 }
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
         }
         .accentColor(.red) // Branding color
         .preferredColorScheme(.dark)

@@ -133,15 +133,21 @@ public struct CockpitView: View {
                         }
                         .disabled(isAnalyzing)
                         
-                        // End Drive Button
+                        // Drive Control Button (Start/End)
                         Button(action: {
-                            finishDrive()
+                            if director.isRunning {
+                                finishDrive()
+                            } else {
+                                Task {
+                                    await director.startSession()
+                                }
+                            }
                         }) {
                             VStack {
-                                Image(systemName: "stop.circle.fill")
+                                Image(systemName: director.isRunning ? "stop.circle.fill" : "play.circle.fill")
                                     .font(.title)
-                                    .foregroundColor(.red)
-                                Text("END DRIVE")
+                                    .foregroundColor(director.isRunning ? .red : .green)
+                                Text(director.isRunning ? "END DRIVE" : "START DRIVE")
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -169,10 +175,7 @@ public struct CockpitView: View {
         }
         .onAppear {
             print("🚀 CockpitView APPEARED")
-            Task {
-                print("🎬 Director Starting Session...")
-                await director.startSession()
-            }
+            // Auto-start removed. User must manually start drive.
         }
         .onDisappear {
             director.stopSession()
@@ -211,6 +214,7 @@ public struct CockpitView: View {
     }
     
     private func finishDrive() {
+        director.stopSession() // Stop camera and location
         let events = director.finishDrive()
         onEndDrive?(events)
     }

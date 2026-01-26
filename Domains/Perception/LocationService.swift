@@ -15,6 +15,7 @@ public class LocationService: NSObject {
     public var currentSpeed: Double = 0.0 // in mph
     public var driveState: DriveState = .stationary
     public var isAuthorized = false
+    public var lastLocation: CLLocation?
     
     override public init() {
         super.init()
@@ -72,5 +73,7 @@ extension LocationService: CLLocationManagerDelegate {
         if location.speed >= 0 {
             updateState(speedMps: location.speed)
         }
+        
+        self.lastLocation = location
     }
 }

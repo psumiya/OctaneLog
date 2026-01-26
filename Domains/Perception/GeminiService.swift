@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import GoogleGenerativeAI
+import CoreLocation
 
 /// Service responsible for interacting with the Google Gemini ecosystem.
 /// Supports both Gemini 3 Flash (fast, real-time) and Pro (complex synthesis).
@@ -15,9 +16,14 @@ public class GeminiService {
     
     // MARK: - Initialization
     
+    // MARK: - Initialization
+    
     public init() {
-        if let key = ProcessInfo.processInfo.environment["GEMINI_API_KEY"], !key.isEmpty {
-            self.configure(with: key)
+        // 1. Try User Key (BYOK)
+        if let userKey = UserDefaults.standard.string(forKey: "user_gemini_api_key"), !userKey.isEmpty {
+            self.configure(with: userKey)
+        } else {
+            print("GeminiService: No API Key found.")
         }
     }
     
@@ -26,14 +32,14 @@ public class GeminiService {
     public func configure(with apiKey: String) {
         self.apiKey = apiKey
         
-        // UPGRADE TO GEMINI 3.0
+        // UPGRADE TO GEMINI 2.5 (Validated from Model List)
         // Flash for high-frequency video analysis
-        self.fastClient = GenerativeModel(name: "gemini-3.0-flash", apiKey: apiKey)
+        self.fastClient = GenerativeModel(name: "gemini-2.5-flash", apiKey: apiKey)
         
         // Pro for deep reasoning and narrative generation (Marathon Agent)
-        self.reasoningClient = GenerativeModel(name: "gemini-3.0-pro", apiKey: apiKey)
+        self.reasoningClient = GenerativeModel(name: "gemini-2.5-pro", apiKey: apiKey)
         
-        print("GeminiService: Configured (Flash 3.0 & Pro 3.0).")
+        print("GeminiService: Configured (gemini-2.5-flash & gemini-2.5-pro).")
     }
     
     // MARK: - Core Features
@@ -54,13 +60,17 @@ public class GeminiService {
     }
     
     /// Generates a description using the Fast model (Flash).
-    public func generateDescription(from imageData: Data) async throws -> String {
+    public func generateDescription(from imageData: Data, location: CLLocation? = nil) async throws -> String {
         guard let client = fastClient else {
             throw GeminiError.notConfigured
         }
         
         do {
-            let prompt = "Describe the scene concisely. Do NOT capture or transcribe license plates, faces, or specific street numbers. Focus on vehicle types, traffic flow, and environment."
+            var prompt = "Describe the scene concisely. Do NOT capture or transcribe license plates, faces, or specific street numbers. Focus on vehicle types, traffic flow, and environment."
+            
+            if let loc = location {
+                prompt += " Context: Coordinates \(loc.coordinate.latitude), \(loc.coordinate.longitude)."
+            }
             
             // gemini-3.0-flash is multimodal.
             let contentStream = client.generateContentStream(prompt, ModelContent.Part.jpeg(imageData))
