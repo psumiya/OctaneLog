@@ -70,6 +70,25 @@ public actor SeasonManager {
 
 // MARK: - Models
 
+public struct Checkpoint: Codable, Sendable {
+    public let date: Date
+    public let type: String // "Weekly", "Monthly", "Yearly"
+}
+
+public struct Recap: Codable, Sendable, Identifiable {
+    public let id: UUID
+    public let date: Date
+    public let periodType: String // "Weekly", "Monthly", "Yearly"
+    public let summary: String
+    
+    public init(id: UUID = UUID(), date: Date, periodType: String, summary: String) {
+        self.id = id
+        self.date = date
+        self.periodType = periodType
+        self.summary = summary
+    }
+}
+
 public struct SeasonArc: Codable, Sendable {
     public let id: UUID
     public var title: String
@@ -77,12 +96,38 @@ public struct SeasonArc: Codable, Sendable {
     public var episodes: [Episode]
     public var recurringCharacters: [String] // e.g., "The Coffee Shop", "Old 66 Highway"
     
-    public init(id: UUID, title: String, theme: String, episodes: [Episode], recurringCharacters: [String]) {
+    // Periodic Summaries
+    public var recaps: [Recap]
+    public var lastWeeklyRecapDate: Date?
+    public var lastMonthlyRecapDate: Date?
+    public var lastYearlyRecapDate: Date?
+    
+    public init(id: UUID, title: String, theme: String, episodes: [Episode], recurringCharacters: [String], recaps: [Recap] = [], lastWeeklyRecapDate: Date? = nil, lastMonthlyRecapDate: Date? = nil, lastYearlyRecapDate: Date? = nil) {
         self.id = id
         self.title = title
         self.theme = theme
         self.episodes = episodes
         self.recurringCharacters = recurringCharacters
+        self.recaps = recaps
+        self.lastWeeklyRecapDate = lastWeeklyRecapDate
+        self.lastMonthlyRecapDate = lastMonthlyRecapDate
+        self.lastYearlyRecapDate = lastYearlyRecapDate
+    }
+    
+    // Custom decoding for backward compatibility
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.theme = try container.decode(String.self, forKey: .theme)
+        self.episodes = try container.decode([Episode].self, forKey: .episodes)
+        self.recurringCharacters = try container.decode([String].self, forKey: .recurringCharacters)
+        
+        // Default to empty/nil if missing
+        self.recaps = try container.decodeIfPresent([Recap].self, forKey: .recaps) ?? []
+        self.lastWeeklyRecapDate = try container.decodeIfPresent(Date.self, forKey: .lastWeeklyRecapDate)
+        self.lastMonthlyRecapDate = try container.decodeIfPresent(Date.self, forKey: .lastMonthlyRecapDate)
+        self.lastYearlyRecapDate = try container.decodeIfPresent(Date.self, forKey: .lastYearlyRecapDate)
     }
 }
 

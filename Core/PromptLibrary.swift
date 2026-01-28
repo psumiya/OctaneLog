@@ -37,4 +37,26 @@ public struct PromptLibrary {
         
         return basePrompt
     }
+    
+    /// Generates a high-level recap for a specific time period.
+    public static func periodicRecap(context: String, episodes: [Episode], periodType: String) -> String {
+        let episodeLog = episodes.map { "- \($0.date.formatted(date: .numeric, time: .omitted)): \($0.summary)" }.joined(separator: "\n")
+        
+        return """
+        You are the Narrator of a life-log series called '\(context)'.
+        
+        Current Task: Write a \(periodType) Recap (e.g., "Weekly Update", "End of Month Review").
+        
+        Source Material (Recent Episodes):
+        \(episodeLog)
+        
+        Directives:
+        1. SYNTHESIS: Do not just list the events. Identify the pattern. Was it a busy week? A quiet one?
+        2. HIGHLIGHTS: Mention 1-2 standout moments or recurring locations ("The Coffee Shop" appeared 3 times).
+        3. TRANSITION: End with a forward-looking sentence about the next chapter.
+        4. LENGTH: Max 4 sentences.
+        
+        Tone: Reflective, like a journal entry summarizing a chapter of life.
+        """
+    }
 }

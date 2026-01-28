@@ -5,10 +5,12 @@ import Foundation
 public actor NarrativeAgent {
     private let seasonManager: SeasonManager
     private let geminiService: AIService // Use Protocol
+    private let dateProvider: () -> Date
     
-    public init(seasonManager: SeasonManager = .shared, geminiService: AIService = GeminiService()) {
+    public init(seasonManager: SeasonManager = .shared, geminiService: AIService = GeminiService(), dateProvider: @escaping () -> Date = Date.init) {
         self.seasonManager = seasonManager
         self.geminiService = geminiService
+        self.dateProvider = dateProvider
     }
     
     /// Processes a completed drive, updates the season arc, and generates an episode summary.
@@ -29,6 +31,9 @@ public actor NarrativeAgent {
         
         // 4. Update State
         await updateState(season: season, newEpisodeTitle: "Drive #\(season.episodes.count + 1)", summary: narrative)
+        
+        // 5. Periodic Summaries
+        await checkAndGenerateRecaps(season: season)
         
         return narrative
     }
@@ -63,11 +68,79 @@ public actor NarrativeAgent {
         }
     }
     
+    private func checkAndGenerateRecaps(season: SeasonArc) async {
+        let now = dateProvider()
+        let calendar = Calendar.current
+        var updatedSeason = await seasonManager.loadSeason() // Reload to get latest state
+        
+        // --- Weekly Recap ---
+        let lastWeekly = updatedSeason.lastWeeklyRecapDate ?? updatedSeason.episodes.first?.date ?? now
+        // Check if 7 days have passed since last weekly recap (or start of season)
+        if let daysSince = calendar.dateComponents([.day], from: lastWeekly, to: now).day, daysSince >= 7 {
+            ThoughtLogger.log(step: "Periodic Check", content: "Weekly recap due. Days since last: \(daysSince)")
+            await generateAndSaveRecap(periodType: "Weekly", season: &updatedSeason)
+            updatedSeason.lastWeeklyRecapDate = now
+        }
+        
+        // --- Monthly Recap ---
+        // Check if today is the last day of the month
+        if let interval = calendar.dateInterval(of: .month, for: now),
+           let lastDayOfMonth = calendar.date(byAdding: .day, value: -1, to: interval.end) {
+            
+            let isLastDay = calendar.isDate(now, inSameDayAs: lastDayOfMonth)
+            let alreadyDone = updatedSeason.lastMonthlyRecapDate.map { calendar.isDate($0, inSameDayAs: now) } ?? false
+            
+            if isLastDay && !alreadyDone {
+                ThoughtLogger.log(step: "Periodic Check", content: "End of Month detected.")
+                await generateAndSaveRecap(periodType: "Monthly", season: &updatedSeason)
+                updatedSeason.lastMonthlyRecapDate = now
+            }
+        }
+        
+        // --- Yearly Recap ---
+        // Check if today is December 31st
+        if calendar.component(.month, from: now) == 12 && calendar.component(.day, from: now) == 31 {
+             let alreadyDone = updatedSeason.lastYearlyRecapDate.map { calendar.isDate($0, inSameDayAs: now) } ?? false
+            
+            if !alreadyDone {
+                ThoughtLogger.log(step: "Periodic Check", content: "End of Year detected.")
+                await generateAndSaveRecap(periodType: "Yearly", season: &updatedSeason)
+                updatedSeason.lastYearlyRecapDate = now
+            }
+        }
+        
+        await seasonManager.saveSeason(updatedSeason)
+    }
+    
+    private func generateAndSaveRecap(periodType: String, season: inout SeasonArc) async {
+        // Filter episodes for the period? 
+        // For simplicity, we pass the last 10 episodes or filter by date.
+        // Let's pass episodes from the relevant window to keep context focused.
+        // But for now, just passing the last 7 episodes for Weekly, last 30 for Monthly?
+        // To save tokens, let's just pass the last 10 episodes regardless, or maybe refine logic later.
+        let recentEpisodes = season.episodes.suffix(15) // simple heuristic
+        
+        let prompt = PromptLibrary.periodicRecap(
+            context: season.title,
+            episodes: Array(recentEpisodes),
+            periodType: periodType
+        )
+        
+        do {
+            let summary = try await geminiService.generateText(prompt: prompt)
+            let recap = Recap(date: dateProvider(), periodType: periodType, summary: summary)
+            season.recaps.append(recap)
+            ThoughtLogger.log(step: "Recap Generation", content: "Generated \(periodType) Recap: \(summary)")
+        } catch {
+            ThoughtLogger.logDecision(topic: "Recap Failure", decision: "Skip", reasoning: "API Error: \(error)")
+        }
+    }
+    
     private func updateState(season: SeasonArc, newEpisodeTitle: String, summary: String) async {
         var updatedSeason = season
         let newEpisode = Episode(
             id: UUID(),
-            date: Date(),
+            date: dateProvider(),
             title: newEpisodeTitle,
             summary: summary,
             tags: ["Auto-Generated"]

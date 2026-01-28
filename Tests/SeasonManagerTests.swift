@@ -57,4 +57,5 @@ final class SeasonManagerTests: XCTestCase {
         XCTAssertFalse(season.episodes.contains(where: { $0.id == ep2.id }), "Episode 2 should be deleted")
         XCTAssertTrue(season.episodes.contains(where: { $0.id == ep3.id }), "Episode 3 should remain")
     }
+    
 }
