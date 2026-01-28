@@ -47,6 +47,32 @@ else
 fi
 
 echo "----------------------------------------------------------------"
+echo "🔍 3. Verifying GEMINI 3.0 Availability..."
+
+# Test 3.0 Flash
+curl -s -H 'Content-Type: application/json' \
+    -d '{"contents":[{"parts":[{"text":"Hello from Gemini 3.0 check."}]}]}' \
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent?key=${API_KEY}" > flash3_response.json
+
+if grep -q "error" flash3_response.json; then
+    echo "⚠️  gemini-3.0-flash NOT AVAILABLE yet."
+    echo "   (This is expected if the model is not yet public/whitelisted)."
+else
+    echo "🚀 SUCCESS: gemini-3.0-flash is LIVE and accepting requests!"
+fi
+
+# Test 3.0 Pro
+curl -s -H 'Content-Type: application/json' \
+    -d '{"contents":[{"parts":[{"text":"Reasoning check."}]}]}' \
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-pro:generateContent?key=${API_KEY}" > pro3_response.json
+
+if grep -q "error" pro3_response.json; then
+    echo "⚠️  gemini-3.0-pro NOT AVAILABLE yet."
+else
+    echo "🚀 SUCCESS: gemini-3.0-pro is LIVE!"
+fi
+
+echo "----------------------------------------------------------------"
 echo "Cleaning up..."
-rm models.json text_response.json
+rm models.json text_response.json flash3_response.json pro3_response.json
 echo "Done."

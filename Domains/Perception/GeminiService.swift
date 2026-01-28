@@ -32,14 +32,14 @@ public class GeminiService {
     public func configure(with apiKey: String) {
         self.apiKey = apiKey
         
-        // UPGRADE TO GEMINI 2.5 (Validated from Model List)
+        // UPGRADE TO GEMINI 3 (Validated from ListModels)
         // Flash for high-frequency video analysis
-        self.fastClient = GenerativeModel(name: "gemini-2.5-flash", apiKey: apiKey)
+        self.fastClient = GenerativeModel(name: "gemini-3-flash-preview", apiKey: apiKey)
         
         // Pro for deep reasoning and narrative generation (Marathon Agent)
-        self.reasoningClient = GenerativeModel(name: "gemini-2.5-pro", apiKey: apiKey)
+        self.reasoningClient = GenerativeModel(name: "gemini-3-pro-preview", apiKey: apiKey)
         
-        print("GeminiService: Configured (gemini-2.5-flash & gemini-2.5-pro).")
+        print("GeminiService: Configured (gemini-3-flash-preview & gemini-3-pro-preview).")
     }
     
     // MARK: - Core Features

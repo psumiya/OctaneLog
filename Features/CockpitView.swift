@@ -4,6 +4,7 @@ import SwiftUI
 public struct CockpitView: View {
     @State var director: DirectorService
     @State private var gemini = GeminiService()
+    @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
     @State private var lastAnalysis: String?
     @State private var isAnalyzing = false
     
@@ -154,6 +155,36 @@ public struct CockpitView: View {
                             }
                             .frame(width: 80, height: 80)
                             .background(Circle().fill(Color.white.opacity(0.1)))
+                        }
+                        
+                        // TEST NARRATIVE (Gemini 3 Check)
+                        if isDeveloperMode {
+                            Button(action: {
+                                Task {
+                                    // Simulate a short drive to test the Narrative Agent
+                                    let testEvents = [
+                                        "Engine started at coordinates 37.7749, -122.4194",
+                                        "Observed a classic 1969 Mustang GT on the highway",
+                                        "Traffic flow moderate, speed maintained at 65mph",
+                                        "Arrived at coastal viewpoint, scenic sunset",
+                                        "Drive concluded"
+                                    ]
+                                    print("🧪 Triggering Narrative Test with Gemini 3...")
+                                    onEndDrive?(testEvents)
+                                }
+                            }) {
+                                VStack {
+                                    Image(systemName: "doc.text.magnifyingglass")
+                                        .font(.title)
+                                        .foregroundColor(.purple)
+                                    Text("NARRATIVE")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                }
+                                .frame(width: 80, height: 80)
+                                .background(Circle().fill(Color.white.opacity(0.1)))
+                            }
                         }
                     }
                     

@@ -39,6 +39,7 @@ public class DirectorService {
             await videoSource.start()
             
             self.isRunning = true
+            self.logEvent("Drive started at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))")
             self.observeStream()
             
         } catch {
@@ -120,7 +121,7 @@ public class DirectorService {
     private func getAnalysisInterval() -> TimeInterval {
         switch locationService.driveState {
         case .stationary:
-            return 120.0 // 2 minutes
+            return 30.0 // Reduced from 120s to 30s for easier testing
         case .crawling:
             return 45.0 // 45 seconds
         case .cruising:
@@ -139,6 +140,7 @@ public class DirectorService {
     
     /// Returns collected events and clears the buffer.
     public func finishDrive() -> [String] {
+        self.logEvent("Drive ended at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))")
         let capturedEvents = self.events
         self.events.removeAll()
         return capturedEvents

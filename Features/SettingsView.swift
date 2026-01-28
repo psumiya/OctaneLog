@@ -3,6 +3,7 @@ import SwiftUI
 public struct SettingsView: View {
     @State private var apiKey: String = ""
     @AppStorage("user_gemini_api_key") private var storedKey: String = ""
+    @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
     @State private var isKeyVisible = false
     
     public init() {}
@@ -74,6 +75,10 @@ public struct SettingsView: View {
                                 .foregroundColor(.red)
                         }
                     }
+                }
+                
+                Section(header: Text("Developer Options")) {
+                    Toggle("Developer Mode", isOn: $isDeveloperMode)
                 }
                 
                 Section(header: Text("About")) {
