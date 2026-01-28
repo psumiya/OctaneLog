@@ -162,15 +162,9 @@ public struct CockpitView: View {
                             Button(action: {
                                 Task {
                                     // Simulate a short drive to test the Narrative Agent
-                                    let testEvents = [
-                                        "Engine started at coordinates 37.7749, -122.4194",
-                                        "Observed a classic 1969 Mustang GT on the highway",
-                                        "Traffic flow moderate, speed maintained at 65mph",
-                                        "Arrived at coastal viewpoint, scenic sunset",
-                                        "Drive concluded"
-                                    ]
+                                    // Simulate a short drive to test the Narrative Agent
                                     print("🧪 Triggering Narrative Test with Gemini 3...")
-                                    onEndDrive?(testEvents)
+                                    onEndDrive?(SimulationData.driveEvents)
                                 }
                             }) {
                                 VStack {

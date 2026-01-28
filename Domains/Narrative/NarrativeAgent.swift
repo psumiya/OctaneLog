@@ -4,9 +4,9 @@ import Foundation
 /// It uses a multi-step verification process (Thinking Levels) and persists state (Season Arc).
 public actor NarrativeAgent {
     private let seasonManager: SeasonManager
-    private let geminiService: GeminiService
+    private let geminiService: AIService // Use Protocol
     
-    public init(seasonManager: SeasonManager = .shared, geminiService: GeminiService = GeminiService()) {
+    public init(seasonManager: SeasonManager = .shared, geminiService: AIService = GeminiService()) {
         self.seasonManager = seasonManager
         self.geminiService = geminiService
     }
@@ -44,29 +44,18 @@ public actor NarrativeAgent {
     }
     
     private func generateNarrative(events: [String], season: SeasonArc) async -> String {
-        let prompt = """
-        You are a Field Logger creating a concise travel log called '\(season.title)'.
-        The Theme is: \(season.theme).
-        
-        Previous context: \(season.recurringCharacters.joined(separator: ", ")).
-        
-        New Events (Sequential):
-        \(events.map { "- \($0)" }.joined(separator: "\n"))
-        
-        Task: Write a summary that strictly follows the sequence of events.
-        
-        STRICT RULES:
-        1. NO DRAMA. Do NOT use words like "journey", "embrace", "canvas", "unseen", "profound".
-        2. FACTS ONLY. State what happened. Do not speculate on feelings or "what could be".
-        3. CAUSALITY: Show how one event led to the next (e.g., "After stopping at X, traffic slowed down at Y").
-        4. TONE: Dry, concise, observant. Like a pilot's log or a dashcam timestamp description.
-        5. LENGTH: Maximum 3 sentences.
-        """
+        // Use PromptLibrary for prompt construction
+        let prompt = PromptLibrary.narrativeGeneration(
+            context: season.recurringCharacters.joined(separator: ", "),
+            events: events,
+            theme: season.theme,
+            title: season.title
+        )
         
         ThoughtLogger.log(step: "Prompt Engineering", content: "Constructed prompt with \(season.episodes.count) episodes of history.")
         
         do {
-            // Try to use the real service
+            // Use the protocol-based service
             return try await geminiService.generateText(prompt: prompt)
         } catch {
             ThoughtLogger.logDecision(topic: "API Failure", decision: "Fallback to offline generator", reasoning: "Gemini API unavailable or key missing.")

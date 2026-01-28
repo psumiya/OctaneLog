@@ -3,9 +3,10 @@ import Observation
 import GoogleGenerativeAI
 import CoreLocation
 
-/// Service responsible for interacting with the Google Gemini ecosystem.
-/// Supports both Gemini 3 Flash (fast, real-time) and Pro (complex synthesis).
-@Observable
+// MARK: - AIService Conformance
+
+extension GeminiService: AIService {}
+
 public class GeminiService {
     
     // MARK: - Properties
@@ -13,8 +14,6 @@ public class GeminiService {
     private var apiKey: String = ""
     private var fastClient: GenerativeModel?      // gemini-3.0-flash (Speed/Vision)
     private var reasoningClient: GenerativeModel? // gemini-3.0-pro (Reasoning/Navigator)
-    
-    // MARK: - Initialization
     
     // MARK: - Initialization
     
@@ -66,14 +65,11 @@ public class GeminiService {
         }
         
         do {
-            var prompt = "Describe the scene concisely. Do NOT capture or transcribe license plates, faces, or specific street numbers. Focus on vehicle types, traffic flow, and environment."
-            
-            if let loc = location {
-                prompt += " Context: Coordinates \(loc.coordinate.latitude), \(loc.coordinate.longitude)."
-            }
+            // Standard prompt for scene description from PromptLibrary.
+            let promptText = PromptLibrary.sceneDescription(location: location)
             
             // gemini-3.0-flash is multimodal.
-            let contentStream = client.generateContentStream(prompt, ModelContent.Part.jpeg(imageData))
+            let contentStream = client.generateContentStream(promptText, ModelContent.Part.jpeg(imageData))
             
             var fullText = ""
             for try await chunk in contentStream {
@@ -90,6 +86,7 @@ public class GeminiService {
         }
     }
 }
+
 
 public enum GeminiError: Error {
     case notConfigured
