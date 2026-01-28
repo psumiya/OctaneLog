@@ -59,4 +59,28 @@ public struct PromptLibrary {
         Tone: Reflective, like a journal entry summarizing a chapter of life.
         """
     }
+    
+    /// Generates a structured 'OctaneSoul' (Yearly Odyssey) report in JSON format.
+    /// Returns a JSON string suitable for decoding specific fields manually (since we can't trust the model to output perfect JSON schema every time without typed API, 
+    /// but for this prompt we will ask for a specific JSON structure).
+    public static func generateOctaneSoul(context: String, episodes: [Episode]) -> String {
+        // We pass the full list of summaries for the year
+        let episodeLog = episodes.map { "- \($0.date.formatted(date: .numeric, time: .omitted)): \($0.summary)" }.joined(separator: "\n")
+        
+        return """
+        You are the Keeper of the Road.
+        Analyze the past year of driving logs for the user's series: '\(context)'.
+        
+        Source Material:
+        \(episodeLog)
+        
+        Task: Create a 'Driver Persona' (OctaneSoul) based on these habits.
+        
+        Return ONLY a raw JSON object (no markdown formatting) with this structure:
+        {
+            "soulTitle": "The [Adjective] [Noun]",  // e.g. "The Midnight Wanderer", "The Asphalt Architect"
+            "soulDescription": "A 2-sentence description of why this title fits, citing specific patterns (e.g. 'You prefer rainy nights...')"
+        }
+        """
+    }
 }

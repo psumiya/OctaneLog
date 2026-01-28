@@ -28,3 +28,6 @@ print("\n✅ Simulation Complete. Check logs for <thought> signatures.")
 
 // Run Periodic Recap Verification
 await RecapVerifier.verifyRecaps()
+
+// Run OctaneSoul Verification
+await OctaneSoulVerifier.verify()

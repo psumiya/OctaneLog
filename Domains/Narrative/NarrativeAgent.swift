@@ -105,11 +105,74 @@ public actor NarrativeAgent {
             if !alreadyDone {
                 ThoughtLogger.log(step: "Periodic Check", content: "End of Year detected.")
                 await generateAndSaveRecap(periodType: "Yearly", season: &updatedSeason)
+                
+                // ALSO trigger OctaneSoul (Yearly Odyssey)
+                await generateAndSaveOctaneSoul(season: &updatedSeason)
+                
                 updatedSeason.lastYearlyRecapDate = now
             }
         }
         
         await seasonManager.saveSeason(updatedSeason)
+    }
+    
+    // MARK: - OctaneSoul Generation
+    
+    private func generateAndSaveOctaneSoul(season: inout SeasonArc) async {
+        let now = dateProvider()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: now)
+        
+        // 1. Filter Episodes for Current Year
+        let yearEpisodes = season.episodes.filter { calendar.component(.year, from: $0.date) == currentYear }
+        guard !yearEpisodes.isEmpty else { return }
+        
+        // 2. Calculate Metadata (Stats)
+        let totalDrives = yearEpisodes.count
+        
+        // Count tags
+        var tagCounts: [String: Int] = [:]
+        for ep in yearEpisodes {
+            for tag in ep.tags {
+                tagCounts[tag, default: 0] += 1
+            }
+        }
+        let topTags = tagCounts.sorted { $0.value > $1.value }.prefix(3).map { $0.key }
+        
+        // 3. Generate Soul (Persona) via Gemini
+        let prompt = PromptLibrary.generateOctaneSoul(context: season.title, episodes: yearEpisodes)
+        
+        var soulTitle = "The Unknown Driver"
+        var soulDesc = "Not enough data to determine the soul."
+        
+        do {
+            let jsonString = try await geminiService.generateText(prompt: prompt)
+            
+            // Clean markdown fences if present
+            let cleanedJSON = jsonString.replacingOccurrences(of: "```json", with: "").replacingOccurrences(of: "```", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if let data = cleanedJSON.data(using: .utf8),
+               let json = try JSONSerialization.jsonObject(with: data) as? [String: String] {
+                soulTitle = json["soulTitle"] ?? soulTitle
+                soulDesc = json["soulDescription"] ?? soulDesc
+            }
+            
+            ThoughtLogger.log(step: "OctaneSoul Generation", content: "Soul Identified: \(soulTitle)")
+            
+        } catch {
+             ThoughtLogger.logDecision(topic: "OctaneSoul Failure", decision: "Skip", reasoning: "API/Parsing Error: \(error)")
+        }
+        
+        // 4. Save
+        let report = OctaneSoulReport(
+            id: UUID(),
+            year: currentYear,
+            totalDrives: totalDrives,
+            topTags: Array(topTags),
+            soulTitle: soulTitle,
+            soulDescription: soulDesc
+        )
+        season.octaneSouls.append(report)
     }
     
     private func generateAndSaveRecap(periodType: String, season: inout SeasonArc) async {

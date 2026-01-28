@@ -89,6 +89,24 @@ public struct Recap: Codable, Sendable, Identifiable {
     }
 }
 
+public struct OctaneSoulReport: Codable, Sendable, Identifiable {
+    public let id: UUID
+    public let year: Int
+    public let totalDrives: Int
+    public let topTags: [String]
+    public let soulTitle: String
+    public let soulDescription: String
+    
+    public init(id: UUID = UUID(), year: Int, totalDrives: Int, topTags: [String], soulTitle: String, soulDescription: String) {
+        self.id = id
+        self.year = year
+        self.totalDrives = totalDrives
+        self.topTags = topTags
+        self.soulTitle = soulTitle
+        self.soulDescription = soulDescription
+    }
+}
+
 public struct SeasonArc: Codable, Sendable {
     public let id: UUID
     public var title: String
@@ -102,7 +120,10 @@ public struct SeasonArc: Codable, Sendable {
     public var lastMonthlyRecapDate: Date?
     public var lastYearlyRecapDate: Date?
     
-    public init(id: UUID, title: String, theme: String, episodes: [Episode], recurringCharacters: [String], recaps: [Recap] = [], lastWeeklyRecapDate: Date? = nil, lastMonthlyRecapDate: Date? = nil, lastYearlyRecapDate: Date? = nil) {
+    // OctaneSoul (Yearly Odyssey)
+    public var octaneSouls: [OctaneSoulReport]
+    
+    public init(id: UUID, title: String, theme: String, episodes: [Episode], recurringCharacters: [String], recaps: [Recap] = [], lastWeeklyRecapDate: Date? = nil, lastMonthlyRecapDate: Date? = nil, lastYearlyRecapDate: Date? = nil, octaneSouls: [OctaneSoulReport] = []) {
         self.id = id
         self.title = title
         self.theme = theme
@@ -112,6 +133,7 @@ public struct SeasonArc: Codable, Sendable {
         self.lastWeeklyRecapDate = lastWeeklyRecapDate
         self.lastMonthlyRecapDate = lastMonthlyRecapDate
         self.lastYearlyRecapDate = lastYearlyRecapDate
+        self.octaneSouls = octaneSouls
     }
     
     // Custom decoding for backward compatibility
@@ -128,6 +150,8 @@ public struct SeasonArc: Codable, Sendable {
         self.lastWeeklyRecapDate = try container.decodeIfPresent(Date.self, forKey: .lastWeeklyRecapDate)
         self.lastMonthlyRecapDate = try container.decodeIfPresent(Date.self, forKey: .lastMonthlyRecapDate)
         self.lastYearlyRecapDate = try container.decodeIfPresent(Date.self, forKey: .lastYearlyRecapDate)
+        
+        self.octaneSouls = try container.decodeIfPresent([OctaneSoulReport].self, forKey: .octaneSouls) ?? []
     }
 }
 

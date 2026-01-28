@@ -5,6 +5,14 @@ import OctaneLogCore
 // Helper Mock classes for Manual Verification
 class MockAIService: AIService {
     func generateText(prompt: String) async throws -> String {
+        if prompt.contains("OctaneSoul") {
+             return """
+             {
+                "soulTitle": "The Mock Soul",
+                "soulDescription": "This is a mock description for verification."
+             }
+             """
+        }
         return "Mock Recap for: " + (prompt.contains("Weekly") ? "Weekly" : (prompt.contains("Monthly") ? "Monthly" : "Yearly"))
     }
     func generateJSON<T>(prompt: String, type: T.Type) async throws -> T where T : Decodable {
