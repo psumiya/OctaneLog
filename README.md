@@ -14,6 +14,15 @@
 - **Narrative Domain**: Generative text synthesis.
 - **Identity Domain**: User profiles and vehicle metadata.
 
+## Privacy & Data Safety
+
+OctaneLog is designed to be **Privacy Aware**.
+
+- **Bring Your Own Key (BYOK)**: *Default Configuration*. Currently, you use your own Google Gemini API Key. Your data is processed under your personal or enterprise agreement with Google.
+- **Smart Redaction**: The "Director" agent is explicitly prompted to **ignore** license plates, faces, and specific street numbers, focusing strictly on vehicle types, scenery, and driving dynamics.
+- **Local Narrative**: Location coordinates are sent to Gemini *only* for context (e.g., to identify "Golden Gate Bridge" vs "A Red Bridge"). The raw GPS history is not tracked or sold; only the generated text stories (the "Saga") are saved locally on your device.
+
+
 ## Directory Structure
 - `App/`: Main App Entry point.
 - `Domains/`: Core Logic separated by Domain (Perception, Narrative, Identity).
