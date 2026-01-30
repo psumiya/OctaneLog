@@ -17,10 +17,26 @@ public class GeminiService {
     
     // MARK: - Initialization
     
+    private let keychainService = "com.octanelog.api.key"
+    private let keychainAccount = "gemini_api_key_v1"
+    
     public init() {
-        // 1. Try User Key (BYOK)
+        // 1. Try Keychain First (Secure)
+        if let data = KeychainHelper.standard.read(service: keychainService, account: keychainAccount),
+           let key = String(data: data, encoding: .utf8), !key.isEmpty {
+            print("GeminiService: Authenticated via Keychain.")
+            self.configure(with: key, persist: false) // Don't re-save to avoid loop
+            return
+        }
+        
+        // 2. Fallback to User Defaults (Legacy/Dev) & MIGRATION
         if let userKey = UserDefaults.standard.string(forKey: "user_gemini_api_key"), !userKey.isEmpty {
-            self.configure(with: userKey)
+            print("GeminiService: Found legacy key in UserDefaults. Migrating to Keychain...")
+            self.configure(with: userKey, persist: true)
+            
+            // 3. Cleanup Legacy
+            UserDefaults.standard.removeObject(forKey: "user_gemini_api_key")
+            print("GeminiService: Legacy key removed from UserDefaults.")
         } else {
             print("GeminiService: No API Key found.")
         }
@@ -28,8 +44,14 @@ public class GeminiService {
     
     // MARK: - Configuration
     
-    public func configure(with apiKey: String) {
+    public func configure(with apiKey: String, persist: Bool = true) {
         self.apiKey = apiKey
+        
+        // Persist to Keychain
+        if persist, let data = apiKey.data(using: .utf8) {
+             KeychainHelper.standard.save(data, service: keychainService, account: keychainAccount)
+             print("GeminiService: API Key saved to Keychain.")
+        }
         
         // UPGRADE TO GEMINI 3 (Validated from ListModels)
         // Flash for high-frequency video analysis
