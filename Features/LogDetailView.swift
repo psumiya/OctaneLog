@@ -8,24 +8,24 @@ struct LogDetailView: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Video Placeholder
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(Color.gray.opacity(0.15))
                     .frame(height: 240)
                     .overlay(
                         VStack {
-                            Image(systemName: "play.circle.fill")
-                                .font(.system(size: 64))
-                                .foregroundColor(.white)
-                            Text("Replay Drive")
-                                .foregroundColor(.white)
+                            Image(systemName: "video.slash")
+                                .font(.system(size: 40))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text("Replay Drive (Coming Soon)")
+                                .foregroundColor(.white.opacity(0.5))
                                 .font(.caption)
                         }
                     )
                 
                 // Map Placeholder
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.blue.opacity(0.2))
+                    .fill(Color.blue.opacity(0.1))
                     .frame(height: 150)
-                    .overlay(Text("Map Route Path").foregroundColor(.white))
+                    .overlay(Text("Map Route Path (Coming Soon)").foregroundColor(.white.opacity(0.5)))
                 
                 // Transcript / Summary
                 VStack(alignment: .leading, spacing: 10) {

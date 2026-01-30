@@ -158,15 +158,19 @@ public struct SeasonArc: Codable, Sendable {
 public struct Episode: Codable, Sendable, Identifiable {
     public let id: UUID
     public let date: Date
-    public let title: String
-    public let summary: String
-    public let tags: [String] // e.g., "Commute", "RoadTrip", "Scenic"
+    public var title: String
+    public var summary: String
+    public var tags: [String] // e.g., "Commute", "RoadTrip", "Scenic"
+    public let rawEvents: [String]?
+    public var isProcessing: Bool
     
-    public init(id: UUID, date: Date, title: String, summary: String, tags: [String]) {
+    public init(id: UUID, date: Date, title: String, summary: String, tags: [String], rawEvents: [String]? = nil, isProcessing: Bool = false) {
         self.id = id
         self.date = date
         self.title = title
         self.summary = summary
         self.tags = tags
+        self.rawEvents = rawEvents
+        self.isProcessing = isProcessing
     }
 }

@@ -74,7 +74,18 @@ public struct GarageView: View {
                                     .foregroundColor(.red)
                             }
                             Spacer()
-                            editButton
+                            HStack {
+                                NavigationLink(destination: SagaView()) {
+                                    Text("Saga")
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.red)
+                                        .cornerRadius(8)
+                                }
+                                editButton
+                            }
                         }
                         .padding()
                         
@@ -177,8 +188,10 @@ public struct GarageView: View {
                         .foregroundColor(.white)
                 }
             }
-            .task {
-                await viewModel.loadSeason()
+            .onAppear {
+                Task {
+                    await viewModel.loadSeason()
+                }
             }
             #if os(iOS)
             .navigationBarHidden(true)

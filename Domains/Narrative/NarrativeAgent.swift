@@ -18,22 +18,46 @@ public actor NarrativeAgent {
         guard !events.isEmpty else { return "No events to narrate." }
         
         // 1. Context Retrieval
-        let season = await seasonManager.loadSeason()
-        ThoughtLogger.log(step: "Context Retrieval", content: "Loaded Season: '\(season.title)'. Current Episode Count: \(season.episodes.count). Recurring Characters: \(season.recurringCharacters.joined(separator: ", "))")
+        var season = await seasonManager.loadSeason()
         
-        // 2. The Thinking Process (The Marathon aspect)
-        // We analyze how this drive fits into the "discovery" theme.
-        let analysis = analyzeAlignment(events: events, season: season)
-        ThoughtLogger.log(step: "Thematic Analysis", content: analysis)
+        // 2. IMMEDIATE SAVE (The "Save First" Pattern)
+        // We create a placeholder episode so data is not lost if the app terminates during AI generation.
+        let newEpisodeId = UUID()
+        let pendingEpisode = Episode(
+            id: newEpisodeId,
+            date: dateProvider(),
+            title: "Drive #\(season.episodes.count + 1) (Processing)",
+            summary: "Analyzing capture data... (Do not close app)",
+            tags: ["Processing"],
+            rawEvents: events,
+            isProcessing: true
+        )
+        season.episodes.append(pendingEpisode)
+        await seasonManager.saveSeason(season)
+        ThoughtLogger.log(step: "Persistence", content: "Saved raw drive data. Starting AI generation...")
         
         // 3. Draft Narrative (Simulated or Real Gemini Call)
+        // This is the slow part where the user might exit.
         let narrative = await generateNarrative(events: events, season: season)
         
-        // 4. Update State
-        await updateState(season: season, newEpisodeTitle: "Drive #\(season.episodes.count + 1)", summary: narrative)
+        // 4. Update the Placeholder with Real Data
+        // We reload the season to ensure we don't overwrite any parallel changes (unlikely here but good practice)
+        var currentSeason = await seasonManager.loadSeason()
+        if let index = currentSeason.episodes.firstIndex(where: { $0.id == newEpisodeId }) {
+            currentSeason.episodes[index].summary = narrative
+            currentSeason.episodes[index].title = "Drive #\(currentSeason.episodes.count)" // Finalize title
+            currentSeason.episodes[index].tags = ["New"] // Reset tags
+            currentSeason.episodes[index].isProcessing = false
+            
+            // Check alignment (formerly step 2, now post-processing)
+            let alignment = analyzeAlignment(events: events, season: currentSeason)
+            ThoughtLogger.log(step: "Thematic Analysis", content: alignment)
+            
+            await seasonManager.saveSeason(currentSeason)
+        }
         
         // 5. Periodic Summaries
-        await checkAndGenerateRecaps(season: season)
+        await checkAndGenerateRecaps(season: currentSeason)
         
         return narrative
     }

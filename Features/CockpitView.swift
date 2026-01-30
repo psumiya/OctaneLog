@@ -2,7 +2,7 @@ import SwiftUI
 
 
 public struct CockpitView: View {
-    @State var director: DirectorService
+    var director: DirectorService
     @State private var gemini = GeminiService()
     @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
     @State private var lastAnalysis: String?
@@ -121,10 +121,10 @@ public struct CockpitView: View {
                             analyzeFrame()
                         }) {
                             VStack {
-                                Image(systemName: isAnalyzing ? "brain.head.profile.fill" : "brain.head.profile")
+                                Image(systemName: isAnalyzing ? "camera.aperture" : "camera.viewfinder")
                                     .font(.title)
                                     .foregroundColor(isAnalyzing ? .yellow : .white)
-                                Text(isAnalyzing ? "ANALYZING" : "ANALYZE")
+                                Text(isAnalyzing ? "CHECKING..." : "SCENE CHECK")
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -168,10 +168,10 @@ public struct CockpitView: View {
                                 }
                             }) {
                                 VStack {
-                                    Image(systemName: "doc.text.magnifyingglass")
+                                    Image(systemName: "ant.circle.fill")
                                         .font(.title)
                                         .foregroundColor(.purple)
-                                    Text("NARRATIVE")
+                                    Text("DEBUG TEST")
                                         .font(.caption2)
                                         .fontWeight(.bold)
                                         .foregroundColor(.white)
