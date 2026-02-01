@@ -5,15 +5,19 @@ import Foundation
 public actor SeasonManager {
     public static let shared = SeasonManager()
     
-    private let fileURL: URL
+    private let storageURL: URL
     
-    public init(fileURL: URL? = nil) {
-        if let url = fileURL {
-            self.fileURL = url
+    public init(storageURL: URL? = nil) {
+        if let url = storageURL {
+            self.storageURL = url
         } else {
             let docDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            self.fileURL = docDir.appendingPathComponent("SeasonArc.json")
+            self.storageURL = docDir.appendingPathComponent("SeasonArc.json")
         }
+    }
+    
+    private var fileURL: URL {
+        return storageURL
     }
     
     /// Loads the current season state or creates a new one if it doesn't exist.
