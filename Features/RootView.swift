@@ -3,10 +3,12 @@ import SwiftUI
 public struct RootView: View {
     var director: DirectorService
     let narrativeAgent: NarrativeAgent
+    let aiService: AIService
     
-    public init(director: DirectorService, narrativeAgent: NarrativeAgent) {
+    public init(director: DirectorService, narrativeAgent: NarrativeAgent, aiService: AIService) {
         self.director = director
         self.narrativeAgent = narrativeAgent
+        self.aiService = aiService
     }
     
     @State private var generatedNarrative: String?
@@ -14,14 +16,31 @@ public struct RootView: View {
 
     public var body: some View {
         TabView {
-            CockpitView(director: director, onEndDrive: { events in
+            CockpitView(director: director, aiService: aiService, onEndDrive: { events in
                 Task {
                     print("🎬 Ending Drive with \(events.count) events...")
+                    
+                    #if os(iOS)
+                    // Request extra time from the system to complete AI generation
+                    var taskID = UIBackgroundTaskIdentifier.invalid
+                    taskID = UIApplication.shared.beginBackgroundTask {
+                        // Expiration handler: Force end if time runs out
+                        UIApplication.shared.endBackgroundTask(taskID)
+                        taskID = .invalid
+                    }
+                    #endif
+                    
                     let summary = await narrativeAgent.processDrive(events: events)
                     
                     await MainActor.run {
                         self.generatedNarrative = summary
                         self.showSummary = true
+                        
+                        #if os(iOS)
+                        // End the background task
+                        UIApplication.shared.endBackgroundTask(taskID)
+                        taskID = .invalid
+                        #endif
                     }
                 }
             })

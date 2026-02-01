@@ -3,15 +3,16 @@ import SwiftUI
 
 public struct CockpitView: View {
     var director: DirectorService
-    @State private var gemini = GeminiService()
+    private let aiService: AIService
     @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
     @State private var lastAnalysis: String?
     @State private var isAnalyzing = false
     
     var onEndDrive: (([String]) -> Void)?
     
-    public init(director: DirectorService, onEndDrive: (([String]) -> Void)? = nil) {
+    public init(director: DirectorService, aiService: AIService, onEndDrive: (([String]) -> Void)? = nil) {
         self.director = director
+        self.aiService = aiService
         self.onEndDrive = onEndDrive
     }
     
@@ -29,7 +30,7 @@ public struct CockpitView: View {
                     Image(systemName: "video.slash")
                         .font(.largeTitle)
                         .padding()
-                    Text("WAITING FOR VIDEO SOURCE")
+                    Text(AppConstants.UI.waitingForVideo)
                         .font(.caption)
                         .tracking(2.0)
                 }
@@ -45,7 +46,7 @@ public struct CockpitView: View {
                 HStack {
                     Image(systemName: "bolt.fill")
                         .foregroundColor(.yellow)
-                    Text("OCTANELOG")
+                    Text(AppConstants.UI.appName)
                         .font(.custom("HelveticaNeue-CondensedBlack", size: 24))
                         .textCase(.uppercase)
                         .foregroundColor(.white)
@@ -54,7 +55,7 @@ public struct CockpitView: View {
                     Spacer()
                     
                     if director.isRunning {
-                        Text("REC")
+                        Text(AppConstants.UI.rec)
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(.horizontal, 8)
@@ -63,7 +64,7 @@ public struct CockpitView: View {
                             .cornerRadius(4)
                             .foregroundColor(.white)
                     } else {
-                        Text("STANDBY")
+                        Text(AppConstants.UI.standby)
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(.horizontal, 8)
@@ -80,7 +81,7 @@ public struct CockpitView: View {
                 if let analysis = lastAnalysis {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("GEMINI VISION")
+                            Text(AppConstants.UI.geminiVision)
                                 .font(.caption2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.yellow)
@@ -124,7 +125,7 @@ public struct CockpitView: View {
                                 Image(systemName: isAnalyzing ? "camera.aperture" : "camera.viewfinder")
                                     .font(.title)
                                     .foregroundColor(isAnalyzing ? .yellow : .white)
-                                Text(isAnalyzing ? "CHECKING..." : "SCENE CHECK")
+                                Text(isAnalyzing ? AppConstants.UI.checking : AppConstants.UI.sceneCheck)
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -148,7 +149,7 @@ public struct CockpitView: View {
                                 Image(systemName: director.isRunning ? "stop.circle.fill" : "play.circle.fill")
                                     .font(.title)
                                     .foregroundColor(director.isRunning ? .red : .green)
-                                Text(director.isRunning ? "END DRIVE" : "START DRIVE")
+                                Text(director.isRunning ? AppConstants.UI.endDrive : AppConstants.UI.startDrive)
                                     .font(.caption2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.white)
@@ -162,7 +163,6 @@ public struct CockpitView: View {
                             Button(action: {
                                 Task {
                                     // Simulate a short drive to test the Narrative Agent
-                                    // Simulate a short drive to test the Narrative Agent
                                     print("🧪 Triggering Narrative Test with Gemini 3...")
                                     onEndDrive?(SimulationData.driveEvents)
                                 }
@@ -171,7 +171,7 @@ public struct CockpitView: View {
                                     Image(systemName: "ant.circle.fill")
                                         .font(.title)
                                         .foregroundColor(.purple)
-                                    Text("DEBUG TEST")
+                                    Text(AppConstants.UI.debugTest)
                                         .font(.caption2)
                                         .fontWeight(.bold)
                                         .foregroundColor(.white)
@@ -185,10 +185,10 @@ public struct CockpitView: View {
                     Spacer()
                     
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("AI SYSTEM")
+                        Text(AppConstants.UI.aiSystem)
                             .font(.caption2)
                             .foregroundColor(.gray)
-                        Text("ONLINE")
+                        Text(AppConstants.UI.online)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundColor(.green)
                     }
@@ -220,7 +220,7 @@ public struct CockpitView: View {
         
         Task {
             do {
-                let description = try await gemini.generateDescription(from: data)
+                let description = try await aiService.generateDescription(from: data, location: nil)
                 await MainActor.run {
                     withAnimation {
                         self.lastAnalysis = description
@@ -247,6 +247,6 @@ public struct CockpitView: View {
 
 struct CockpitView_Previews: PreviewProvider {
     static var previews: some View {
-        CockpitView(director: DirectorService(videoSource: MockCameraSource()))
+        CockpitView(director: DirectorService(videoSource: MockCameraSource()), aiService: GeminiService())
     }
 }
