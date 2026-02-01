@@ -4,7 +4,7 @@ import CoreLocation
 
 // MARK: - Mocks
 
-class MockAIService: AIService {
+class IntegrationMockAIService: AIService {
     var generatedTextResponse: String = "Mocked AI Response"
     var generateDescriptionResponse: String = "Mocked Description"
     
@@ -41,7 +41,7 @@ final class IntegrationTests: XCTestCase {
     // Test Case 1: The Full Drive Cycle
     func testDirectorToNarrativeFlow() async throws {
         // 1. Setup Dependencies
-        let mockAI = MockAIService()
+        let mockAI = IntegrationMockAIService()
         mockAI.generatedTextResponse = "Integration Test Narrative Summary"
         
         let seasonManager = SeasonManager(storageURL: seasonFileUtils)
@@ -92,7 +92,7 @@ final class IntegrationTests: XCTestCase {
     
     // Test Case 2: Async Persistence ("Save-First" Pattern)
     func testSaveFirstPattern() async throws {
-        let mockAI = MockAIService()
+        let mockAI = IntegrationMockAIService()
         // Determine a way to pause or inspect state during "processing" might be hard without more hooks,
         // but we can verify the final state and the "isProcessing" flag flow if we had granular visibility.
         // For now, let's verify that a "Processing" episode can be saved.

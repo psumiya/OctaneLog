@@ -38,7 +38,7 @@ final class NarrativeAgentTests: XCTestCase {
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         
         let fileURL = tempDir.appendingPathComponent("TestSeason.json")
-        seasonManager = SeasonManager(fileURL: fileURL)
+        seasonManager = SeasonManager(storageURL: fileURL)
         
         mockService = MockAIService()
         agent = NarrativeAgent(seasonManager: seasonManager, geminiService: mockService)
