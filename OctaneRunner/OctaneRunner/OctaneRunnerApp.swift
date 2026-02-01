@@ -12,7 +12,7 @@ struct OctaneRunnerApp: App {
     @State var director = DirectorService()
     
     // Shared Dependencies
-    let aiService = GeminiService()
+    let aiService: AIService
     let narrativeAgent: NarrativeAgent
     
     init() {
