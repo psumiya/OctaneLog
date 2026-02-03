@@ -31,6 +31,8 @@ OctaneLog is designed to be **Privacy Aware**.
 
 ## Getting Started
 
+> ⚠️ **This project is under active development. Builds may fail. Tests may fail. Please use with caution.**
+
 ### Prerequisites
 - Xcode 15+
 - Swift 5.9+
