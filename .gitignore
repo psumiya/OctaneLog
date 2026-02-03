@@ -21,3 +21,8 @@ DerivedData/
 
 # CocoaPods
 Pods/
+
+# Debug logs
+models.json
+*_response.json
+clean_project.sh
