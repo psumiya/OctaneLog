@@ -16,8 +16,14 @@ public struct CockpitView: View {
         self.onEndDrive = onEndDrive
     }
     
+    @Environment(\.scenePhase) var scenePhase
+    
     public var body: some View {
         ZStack {
+            // 0. FAIL-SAFE BACKGROUND
+            // This ensures that if the image layer fails (transparent), we see black, not grey.
+            Color.black.edgesIgnoringSafeArea(.all)
+            
             // 1. Live Viewfinder
             if let frame = director.lastFrame {
                 Image(decorative: frame, scale: 1.0, orientation: .up)
@@ -27,17 +33,23 @@ public struct CockpitView: View {
                     .overlay(Color.black.opacity(0.2))
             } else {
                 VStack {
+                    if isDeveloperMode {
+                         Text("DEBUG: No Frame\nRunning: \(director.isRunning)")
+                            .font(.caption2)
+                            .foregroundColor(.yellow)
+                    }
+                    
                     Image(systemName: "video.slash")
                         .font(.largeTitle)
                         .padding()
-                    Text(AppConstants.UI.waitingForVideo)
+                    Text(director.isRunning ? AppConstants.UI.waitingForVideo : "SESSION ENDED")
                         .font(.caption)
                         .tracking(2.0)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
-                .edgesIgnoringSafeArea(.all) // Placeholder ignores safe area
-                .foregroundColor(.gray)
+                .background(Color.black.opacity(0.8)) // Explicit background
+                .edgesIgnoringSafeArea(.all)
+                .foregroundColor(.white)
             }
             
             // 2. HUD (Heads-Up Display)
@@ -204,6 +216,17 @@ public struct CockpitView: View {
         }
         .onDisappear {
             director.stopSession()
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .background {
+                print("📱 App Backgrounded. Invalidating preview to prevent zombie frames.")
+                // If not running, ensure next launch shows "Session Ended" cleanly
+                if !director.isRunning {
+                    director.lastFrame = nil
+                }
+                // If running, we keep it, assuming background task might keep it alive,
+                // or we accept the risk. For safety, let's clear it if not crucial.
+            }
         }
     }
     

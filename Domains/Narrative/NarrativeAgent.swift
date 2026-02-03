@@ -15,7 +15,8 @@ public actor NarrativeAgent {
     
     /// Processes a completed drive, updates the season arc, and generates an episode summary.
     public func processDrive(events: [String]) async -> String {
-        guard !events.isEmpty else { return "No events to narrate." }
+        // Fallback for empty drives
+        let driveEvents = events.isEmpty ? ["Drive started.", "Drive ended unexpectedly (No events)."] : events
         
         // 1. Context Retrieval
         var season = await seasonManager.loadSeason()
@@ -29,7 +30,7 @@ public actor NarrativeAgent {
             title: "Drive #\(season.episodes.count + 1) (Processing)",
             summary: "Analyzing capture data... (Do not close app)",
             tags: [AppConstants.Narrative.processingTag],
-            rawEvents: events,
+            rawEvents: driveEvents,
             isProcessing: true
         )
         season.episodes.append(pendingEpisode)
@@ -38,7 +39,7 @@ public actor NarrativeAgent {
         
         // 3. Draft Narrative (Simulated or Real Gemini Call)
         // This is the slow part where the user might exit.
-        let narrative = await generateNarrative(events: events, season: season)
+        let narrative = await generateNarrative(events: driveEvents, season: season)
         
         // 4. Update the Placeholder with Real Data
         // We reload the season to ensure we don't overwrite any parallel changes (unlikely here but good practice)
@@ -50,7 +51,7 @@ public actor NarrativeAgent {
             currentSeason.episodes[index].isProcessing = false
             
             // Check alignment (formerly step 2, now post-processing)
-            let alignment = analyzeAlignment(events: events, season: currentSeason)
+            let alignment = analyzeAlignment(events: driveEvents, season: currentSeason)
             ThoughtLogger.log(step: "Thematic Analysis", content: alignment)
             
             await seasonManager.saveSeason(currentSeason)

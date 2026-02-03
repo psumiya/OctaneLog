@@ -48,6 +48,7 @@ public class DirectorService {
     }
     
     public func stopSession() {
+        print("Director: Stopping Session. Last Frame Exists: \(self.lastFrame != nil)")
         videoSource.stop()
         locationService.stopMonitoring()
         self.isRunning = false
