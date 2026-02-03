@@ -1,7 +1,7 @@
 import XCTest
 @testable import OctaneLogCore
 
-final class OctaneLogTests: XCTestCase {
+final class UnitTests: XCTestCase {
     
     func testDirectorServiceInitialization() {
         let director = DirectorService()
@@ -15,7 +15,7 @@ final class OctaneLogTests: XCTestCase {
         XCTAssertNotNil(service, "GeminiService should initialize")
     }
     
-    func testDirectorStopSessionMaintainsLastFrame() async {
+    func testDirectorStopSessionMaintainsLastFrame() async throws {
         // Arrange
         let director = DirectorService(videoSource: MockCameraSource())
         await director.startSession()
