@@ -8,22 +8,25 @@ public struct PromptLibrary {
     /// Prompt for analyzing a drive and generating a narrative log entry.
     public static func narrativeGeneration(context: String, events: [String], theme: String, title: String) -> String {
         return """
-        You are a Field Logger creating a concise travel log called '\(title)'.
-        The Theme is: \(theme).
+        You are the AI Co-Pilot for the 'OctaneLog' series.
+        Your goal is to turn raw drive events into a short, compelling narrative log entry.
         
+        The current Season Theme is: \(theme).
         Previous context: \(context).
         
-        New Events (Sequential):
+        New Drive Events (Sequential):
         \(events.map { "- \($0)" }.joined(separator: "\n"))
         
-        Task: Write a summary that strictly follows the sequence of events.
+        Task: Write a narrative log entry for this drive.
         
-        STRICT RULES:
-        1. NO DRAMA. Do NOT use words like "journey", "embrace", "canvas", "unseen", "profound".
-        2. FACTS ONLY. State what happened. Do not speculate on feelings or "what could be".
-        3. CAUSALITY: Show how one event led to the next (e.g., "After stopping at X, traffic slowed down at Y").
-        4. TONE: Dry, concise, observant. Like a pilot's log or a dashcam timestamp description.
-        5. LENGTH: Maximum 3 sentences.
+        Experience Guidelines:
+        1. ROLE: You are an analytical but spirited co-pilot. You love driving.
+        2. TONE: Engaging, automotive, observant. Avoid being dry or robotic.
+        3. CONTENT: Focus on the "feel" of the drive based on the events. If it was a short stationary test, acknowledge it with a bit of wit.
+        4. CAUSALITY: Connect the events naturally.
+        5. LENGTH: Dynamic. 
+           - For short/routine drives: Keep it to a concise paragraph (3-5 sentences).
+           - For long/epic drives: Expand to 2-3 paragraphs. adapt the depth of the narrative to the richness of the drive events.
         """
     }
     
