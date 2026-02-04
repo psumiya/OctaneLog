@@ -49,7 +49,7 @@ final class NarrativeTests: XCTestCase {
         mockService.shouldThrowError = true
         
         // Act
-        let narrative = await agent.processDrive(events: events)
+        let narrative = await agent.processDrive(events: events, route: [])
         
         // Assert
         // Expect offline fallback
@@ -60,7 +60,7 @@ final class NarrativeTests: XCTestCase {
         let (tempDir, seasonManager, _, agent) = try createDependencies()
         defer { try? FileManager.default.removeItem(at: tempDir) }
         
-        let narrative = await agent.processDrive(events: [])
+        let narrative = await agent.processDrive(events: [], route: [])
         XCTAssertEqual(narrative, "Mock response") // Default mock response
         
         let season = await seasonManager.loadSeason()

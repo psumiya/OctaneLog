@@ -61,6 +61,16 @@ public class DirectorService {
     
     private func handleLocationUpdate(location: CLLocation, state: DriveState) {
         let now = Date()
+        
+        // Track Route
+        if location.horizontalAccuracy < 50 { // Only high quality points
+            self.currentRoute.append(RoutePoint(
+                latitude: location.coordinate.latitude,
+                longitude: location.coordinate.longitude,
+                timestamp: location.timestamp
+            ))
+        }
+
         let timeSinceLastLog = now.timeIntervalSince(lastLocationLogTime)
         
         // Log if state changed significantly
@@ -171,6 +181,7 @@ public class DirectorService {
     
     // MARK: - Event Logging (Narrative Source)
     public var events: [String] = []
+    private var currentRoute: [RoutePoint] = []
     
     public func logEvent(_ description: String) {
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
@@ -179,11 +190,15 @@ public class DirectorService {
     }
     
     /// Returns collected events and clears the buffer.
-    public func finishDrive() -> [String] {
+    public func finishDrive() -> (events: [String], route: [RoutePoint]) {
         self.logEvent("Drive ended at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))")
         let capturedEvents = self.events
+        let capturedRoute = self.currentRoute
+        
         self.events.removeAll()
-        return capturedEvents
+        self.currentRoute.removeAll()
+        
+        return (capturedEvents, capturedRoute)
     }
     /// Captures the current frame as JPEG Data.
     public func snapshot() -> Data? {

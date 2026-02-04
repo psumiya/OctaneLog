@@ -11,7 +11,7 @@ let ep1Events = [
     "Stopped at a Coffee Shop in Malibu.",
     "Saw a classic 1969 Mustang."
 ]
-let ep1Result = await agent.processDrive(events: ep1Events)
+let ep1Result = await agent.processDrive(events: ep1Events, route: [])
 print(">> Generated: \(ep1Result)")
 
 print("\n--- Episode 2: The Callback ---")
@@ -21,7 +21,7 @@ let ep2Events = [
     "Weather was rainy.",
     "Traffic was heavy."
 ]
-let ep2Result = await agent.processDrive(events: ep2Events)
+let ep2Result = await agent.processDrive(events: ep2Events, route: [])
 print(">> Generated: \(ep2Result)")
 
 print("\n✅ Simulation Complete. Check logs for <thought> signatures.")

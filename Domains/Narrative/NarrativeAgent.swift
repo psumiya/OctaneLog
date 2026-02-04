@@ -14,7 +14,7 @@ public actor NarrativeAgent {
     }
     
     /// Processes a completed drive, updates the season arc, and generates an episode summary.
-    public func processDrive(events: [String]) async -> String {
+    public func processDrive(events: [String], route: [RoutePoint]) async -> String {
         // Fallback for empty drives
         let driveEvents = events.isEmpty ? ["Drive started.", "Drive ended unexpectedly (No events)."] : events
         
@@ -31,6 +31,7 @@ public actor NarrativeAgent {
             summary: "Analyzing capture data... (Do not close app)",
             tags: [AppConstants.Narrative.processingTag],
             rawEvents: driveEvents,
+            route: route,
             isProcessing: true
         )
         season.episodes.append(pendingEpisode)

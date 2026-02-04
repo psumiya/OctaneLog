@@ -21,11 +21,22 @@ struct LogDetailView: View {
                         }
                     )
                 
-                // Map Placeholder
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(height: 150)
-                    .overlay(Text("Map Route Path (Coming Soon)").foregroundColor(.white.opacity(0.5)))
+                // Map Route Path
+                if !episode.route.isEmpty {
+                    RouteMapView(route: episode.route)
+                        .frame(height: 200)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                } else {
+                    // Fallback Placeholder if no route data
+                    RoundedRectangle(cornerRadius: 12)
+                           .fill(Color.blue.opacity(0.1))
+                           .frame(height: 150)
+                           .overlay(Text("No Route Data Available").foregroundColor(.white.opacity(0.5)))
+                }
                 
                 // Transcript / Summary
                 VStack(alignment: .leading, spacing: 10) {

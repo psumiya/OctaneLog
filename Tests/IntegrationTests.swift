@@ -61,7 +61,8 @@ final class IntegrationTests: XCTestCase {
         director.stopSession()
         XCTAssertFalse(director.isRunning)
         
-        let events = director.finishDrive()
+        let result = director.finishDrive()
+        let events = result.events
         // finishDrive also logs "Drive ended...", so count should be 2 + 1 = 3?
         // Let's check DirectorService.finishDrive implementation:
         // func finishDrive() -> [String] {
@@ -78,7 +79,7 @@ final class IntegrationTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(events.count, 3)
         
         // 4. Generate Narrative
-        let summary = await narrativeAgent.processDrive(events: events)
+        let summary = await narrativeAgent.processDrive(events: events, route: [])
         
         // 5. Verification
         XCTAssertEqual(summary, "Integration Test Narrative Summary")

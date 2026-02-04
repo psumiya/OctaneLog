@@ -21,20 +21,20 @@ public struct OctaneSoulVerifier {
         
         // 1. Generate some episodes
         print("   Step 1: Simulating drives throughout the year...")
-        _ = await agent.processDrive(events: ["Scenic drive on Highway 1"])
+        _ = await agent.processDrive(events: ["Scenic drive on Highway 1"], route: [])
         
         mockDate.date = formatter.date(from: "2026-06-15")!
-        _ = await agent.processDrive(events: ["Night drive in the city", "Heavy traffic"])
+        _ = await agent.processDrive(events: ["Night drive in the city", "Heavy traffic"], route: [])
         
         mockDate.date = formatter.date(from: "2026-11-20")!
-        _ = await agent.processDrive(events: ["Mountain pass", "Snowy conditions"])
+        _ = await agent.processDrive(events: ["Mountain pass", "Snowy conditions"], route: [])
         
         // 2. Fast forward to Dec 31st (Trigger Date)
         print("   Step 2: Jumping to Dec 31st...")
         mockDate.date = formatter.date(from: "2026-12-31")!
         
         // Trigger
-        _ = await agent.processDrive(events: ["Final drive of the year"])
+        _ = await agent.processDrive(events: ["Final drive of the year"], route: [])
         
         // 3. Verify
         let season = await manager.loadSeason()

@@ -8,9 +8,9 @@ public struct CockpitView: View {
     @State private var lastAnalysis: String?
     @State private var isAnalyzing = false
     
-    var onEndDrive: (([String]) -> Void)?
+    var onEndDrive: (([String], [RoutePoint]) -> Void)?
     
-    public init(director: DirectorService, aiService: AIService, onEndDrive: (([String]) -> Void)? = nil) {
+    public init(director: DirectorService, aiService: AIService, onEndDrive: (([String], [RoutePoint]) -> Void)? = nil) {
         self.director = director
         self.aiService = aiService
         self.onEndDrive = onEndDrive
@@ -176,7 +176,7 @@ public struct CockpitView: View {
                                 Task {
                                     // Simulate a short drive to test the Narrative Agent
                                     print("🧪 Triggering Narrative Test with Gemini 3...")
-                                    onEndDrive?(SimulationData.driveEvents)
+                                    onEndDrive?(SimulationData.driveEvents, [])
                                 }
                             }) {
                                 VStack {
@@ -263,8 +263,8 @@ public struct CockpitView: View {
     
     private func finishDrive() {
         director.stopSession() // Stop camera and location
-        let events = director.finishDrive()
-        onEndDrive?(events)
+        let result = director.finishDrive()
+        onEndDrive?(result.events, result.route)
     }
 }
 

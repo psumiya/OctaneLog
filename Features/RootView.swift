@@ -16,9 +16,9 @@ public struct RootView: View {
 
     public var body: some View {
         TabView {
-            CockpitView(director: director, aiService: aiService, onEndDrive: { events in
+            CockpitView(director: director, aiService: aiService, onEndDrive: { events, route in
                 Task {
-                    print("🎬 Ending Drive with \(events.count) events...")
+                    print("🎬 Ending Drive with \(events.count) events and \(route.count) route points...")
                     
                     #if os(iOS)
                     // Request extra time from the system to complete AI generation
@@ -30,7 +30,7 @@ public struct RootView: View {
                     }
                     #endif
                     
-                    let summary = await narrativeAgent.processDrive(events: events)
+                    let summary = await narrativeAgent.processDrive(events: events, route: route)
                     
                     await MainActor.run {
                         self.generatedNarrative = summary

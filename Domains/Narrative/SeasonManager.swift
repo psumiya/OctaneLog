@@ -162,6 +162,18 @@ public struct SeasonArc: Codable, Sendable {
     }
 }
 
+public struct RoutePoint: Codable, Sendable {
+    public let latitude: Double
+    public let longitude: Double
+    public let timestamp: Date
+    
+    public init(latitude: Double, longitude: Double, timestamp: Date) {
+        self.latitude = latitude
+        self.longitude = longitude
+        self.timestamp = timestamp
+    }
+}
+
 public struct Episode: Codable, Sendable, Identifiable {
     public let id: UUID
     public let date: Date
@@ -169,15 +181,17 @@ public struct Episode: Codable, Sendable, Identifiable {
     public var summary: String
     public var tags: [String] // e.g., "Commute", "RoadTrip", "Scenic"
     public let rawEvents: [String]?
+    public let route: [RoutePoint]
     public var isProcessing: Bool
     
-    public init(id: UUID, date: Date, title: String, summary: String, tags: [String], rawEvents: [String]? = nil, isProcessing: Bool = false) {
+    public init(id: UUID, date: Date, title: String, summary: String, tags: [String], rawEvents: [String]? = nil, route: [RoutePoint] = [], isProcessing: Bool = false) {
         self.id = id
         self.date = date
         self.title = title
         self.summary = summary
         self.tags = tags
         self.rawEvents = rawEvents
+        self.route = route
         self.isProcessing = isProcessing
     }
 }
