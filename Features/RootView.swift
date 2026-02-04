@@ -47,6 +47,18 @@ public struct RootView: View {
             .sheet(isPresented: $showSummary) {
                 if let summary = generatedNarrative {
                     NarrativeSummaryView(summary: summary)
+                } else {
+                    // Fallback if sheet is presented but data isn't ready (shouldn't happen, but safe)
+                    ZStack {
+                        Color.black.edgesIgnoringSafeArea(.all)
+                        VStack {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            Text("Loading Summary...")
+                                .foregroundColor(.white)
+                                .padding(.top)
+                        }
+                    }
                 }
             }
             .tabItem {
@@ -76,38 +88,50 @@ struct NarrativeSummaryView: View {
     var body: some View {
         ZStack {
             Color.black.edgesIgnoringSafeArea(.all)
-            VStack(spacing: 24) {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.green)
-                
-                Text("DRIVE LOGGED")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .tracking(2)
-                
-                Text(summary)
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.white.opacity(0.9))
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                
-                Button(action: { dismiss() }) {
-                    Text("Close")
+            
+            ScrollView { // Added ScrollView to prevent layout issues with long text
+                VStack(spacing: 24) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.green)
+                        .padding(.top, 40) // Add top padding for scroll view
+                    
+                    Text("DRIVE LOGGED")
+                        .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(.black)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.white)
-                        .cornerRadius(12)
+                        .foregroundColor(.white)
+                        .tracking(2)
+                    
+                    // Fallback for empty strings causing layout collapse
+                    if summary.isEmpty {
+                        Text("No summary generated.")
+                            .foregroundColor(.gray)
+                            .padding()
+                    } else {
+                        Text(summary)
+                            .font(.body)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.white.opacity(0.9))
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(12)
+                            .padding(.horizontal)
+                    }
+                    
+                    Button(action: { dismiss() }) {
+                        Text("Close")
+                            .fontWeight(.bold)
+                            .foregroundColor(.black)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 40) // Add bottom padding for scroll view
                 }
-                .padding(.horizontal)
+                .padding()
             }
-            .padding()
         }
     }
 }
