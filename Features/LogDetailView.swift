@@ -6,25 +6,10 @@ struct LogDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Video Placeholder
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.15))
-                    .frame(height: 240)
-                    .overlay(
-                        VStack {
-                            Image(systemName: "video.slash")
-                                .font(.system(size: 40))
-                                .foregroundColor(.white.opacity(0.5))
-                            Text("Replay Drive (Coming Soon)")
-                                .foregroundColor(.white.opacity(0.5))
-                                .font(.caption)
-                        }
-                    )
-                
-                // Map Route Path
+                // Map Route Path with Replay
                 if !episode.route.isEmpty {
-                    RouteMapView(route: episode.route)
-                        .frame(height: 200)
+                    ReplayMapView(route: episode.route)
+                        .frame(height: 300)
                         .cornerRadius(12)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
