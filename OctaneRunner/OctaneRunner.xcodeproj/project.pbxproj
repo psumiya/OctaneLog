@@ -15,9 +15,22 @@
 		1096D1C72F1D76EC00F4FD2B /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		10F0EC712F33107100E7D6FB /* Exceptions for "OctaneRunner" folder in "OctaneRunner" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1096D1B12F1D60B400F4FD2B /* OctaneRunner */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1096D1B42F1D60B400F4FD2B /* OctaneRunner */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				10F0EC712F33107100E7D6FB /* Exceptions for "OctaneRunner" folder in "OctaneRunner" target */,
+			);
 			path = OctaneRunner;
 			sourceTree = "<group>";
 		};
@@ -267,6 +280,7 @@
 				DEVELOPMENT_TEAM = C6X34X299T;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OctaneRunner/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "OctaneLog uses the camera to capture video for autonomous drive analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -300,6 +314,7 @@
 				DEVELOPMENT_TEAM = C6X34X299T;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OctaneRunner/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "OctaneLog uses the camera to capture video for autonomous drive analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
