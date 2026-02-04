@@ -16,5 +16,9 @@
     <string>OctaneLog uses the camera to capture video for autonomous road analysis.</string>
     <key>UILaunchScreen</key>
     <dict/>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+    </array>
 </dict>
 </plist>

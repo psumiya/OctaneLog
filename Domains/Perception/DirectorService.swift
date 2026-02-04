@@ -1,6 +1,7 @@
 import Foundation
 import CoreGraphics
 import Observation
+import CoreLocation
 
 /// The "Director" of the show.
 /// Responsible for analyzing the video feed and deciding what to capture.
@@ -32,6 +33,7 @@ public class DirectorService {
             try await videoSource.prepare()
             
             // Start Location Monitoring
+            self.setupLocationObserver()
             self.locationService.requestPermission() 
             self.locationService.startMonitoring()
             
@@ -44,6 +46,43 @@ public class DirectorService {
             
         } catch {
             print("Director Error: \(error)")
+        }
+    }
+    
+    private var lastState: DriveState = .stationary
+    private var lastLocationLogTime: Date = Date.distantPast
+    
+    private func setupLocationObserver() {
+        locationService.onLocationUpdate = { [weak self] location, driveState in
+            guard let self = self else { return }
+            self.handleLocationUpdate(location: location, state: driveState)
+        }
+    }
+    
+    private func handleLocationUpdate(location: CLLocation, state: DriveState) {
+        let now = Date()
+        let timeSinceLastLog = now.timeIntervalSince(lastLocationLogTime)
+        
+        // Log if state changed significantly
+        if state != self.lastState {
+            self.logEvent("Telemetry Update: State changed to [\(state.rawValue)] - Speed: \(Int(locationService.currentSpeed)) mph")
+            self.lastState = state
+            self.lastLocationLogTime = now
+            return
+        }
+        
+        // Log heartbeat if in background (simulated by checking if analysis is lagging) or just periodic
+        // If we haven't analyzed a frame in a while, it means we are likely backgrounded.
+        // Let's rely on time.
+        // If Cruising, log every 60 seconds.
+        // If Stationary, log every 5 minutes.
+        
+        let heartbeatInterval: TimeInterval = state == .stationary ? 300 : 60
+        
+        if timeSinceLastLog >= heartbeatInterval {
+             let coordinate = "\(location.coordinate.latitude),\(location.coordinate.longitude)"
+             self.logEvent("Telemetry Heartbeat: [\(state.rawValue)] - Speed: \(Int(locationService.currentSpeed)) mph @ \(coordinate)")
+             self.lastLocationLogTime = now
         }
     }
     

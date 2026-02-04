@@ -17,23 +17,38 @@ public class LocationService: NSObject {
     public var isAuthorized = false
     public var lastLocation: CLLocation?
     
+    public var onLocationUpdate: ((CLLocation, DriveState) -> Void)?
+
     override public init() {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.distanceFilter = kCLDistanceFilterNone
+        
+        // Critical for background tracking
+        #if os(iOS)
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
+        locationManager.activityType = .automotiveNavigation
+        #endif
     }
     
     public func requestPermission() {
-        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestAlwaysAuthorization() 
     }
     
     public func startMonitoring() {
         locationManager.startUpdatingLocation()
+        #if os(iOS)
+        locationManager.allowsBackgroundLocationUpdates = true
+        #endif
     }
     
     public func stopMonitoring() {
         locationManager.stopUpdatingLocation()
+        #if os(iOS)
+        locationManager.allowsBackgroundLocationUpdates = false
+        #endif
     }
     
     private func updateState(speedMps: Double) {
@@ -69,11 +84,27 @@ extension LocationService: CLLocationManagerDelegate {
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
-        // Negative speed indicates an invalid value
-        if location.speed >= 0 {
-            updateState(speedMps: location.speed)
+        var effectiveSpeed = location.speed
+        
+        // Fallback: Calculate speed manually if invalid (-1)
+        if effectiveSpeed < 0, let last = self.lastLocation {
+            let distance = location.distance(from: last)
+            let timeDiff = location.timestamp.timeIntervalSince(last.timestamp)
+            
+            // Avoid division by zero and unrealistic jumps
+            if timeDiff > 0 && distance > 0 {
+                effectiveSpeed = distance / timeDiff
+            }
         }
         
+        // Treat negative speed as 0 if still invalid after fallback
+        effectiveSpeed = max(0, effectiveSpeed)
+        
+        updateState(speedMps: effectiveSpeed)
+        
         self.lastLocation = location
+        
+        // Notify listener
+        self.onLocationUpdate?(location, self.driveState)
     }
 }
