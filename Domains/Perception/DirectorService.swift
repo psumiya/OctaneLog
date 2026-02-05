@@ -46,13 +46,7 @@ public class DirectorService: NSObject {
             }
         }
         
-        // Add Audio Input (Optional, but adds context)
-        if let audioDevice = AVCaptureDevice.default(for: .audio),
-           let audioInput = try? AVCaptureDeviceInput(device: audioDevice) {
-            if captureSession.canAddInput(audioInput) {
-                captureSession.addInput(audioInput)
-            }
-        }
+        // Audio Input Removed per user request.
         
         // Add Movie Output
         if captureSession.canAddOutput(movieOutput) {

@@ -8,7 +8,5 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>OctaneLog uses the camera to record your drive for AI analysis.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>OctaneLog uses the microphone to record audio during your drives.</string>
 </dict>
 </plist>
