@@ -29,6 +29,11 @@ public enum AppConstants {
         public static let geminiVision = "GEMINI VISION"
     }
     
+    public enum Settings {
+        public static let uploadOverWifiOnly = "uploadOverWifiOnly"
+        public static let videoQuality = "videoQuality"
+    }
+    
     public enum Config {
         public static let episodeRecapSuffixCount = 15
         public static let weeklyRecapIntervalDays = 7

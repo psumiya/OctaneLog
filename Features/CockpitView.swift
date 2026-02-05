@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 
 public struct CockpitView: View {
@@ -8,9 +9,9 @@ public struct CockpitView: View {
     @State private var lastAnalysis: String?
     @State private var isAnalyzing = false
     
-    var onEndDrive: (([String], [RoutePoint]) -> Void)?
+    var onEndDrive: (([String], [RoutePoint], [URL]) -> Void)?
     
-    public init(director: DirectorService, aiService: AIService, onEndDrive: (([String], [RoutePoint]) -> Void)? = nil) {
+    public init(director: DirectorService, aiService: AIService, onEndDrive: (([String], [RoutePoint], [URL]) -> Void)? = nil) {
         self.director = director
         self.aiService = aiService
         self.onEndDrive = onEndDrive
@@ -25,29 +26,21 @@ public struct CockpitView: View {
             Color.black.edgesIgnoringSafeArea(.all)
             
             // 1. Live Viewfinder
-            if let frame = director.lastFrame {
-                Image(decorative: frame, scale: 1.0, orientation: .up)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .edgesIgnoringSafeArea(.all) // Background ignores safe area
-                    .overlay(Color.black.opacity(0.2))
-            } else {
-                VStack {
-                    if isDeveloperMode {
-                         Text("DEBUG: No Frame\nRunning: \(director.isRunning)")
-                            .font(.caption2)
-                            .foregroundColor(.yellow)
-                    }
-                    
+            CameraPreview(session: director.captureSession)
+                .edgesIgnoringSafeArea(.all)
+                .overlay(Color.black.opacity(0.1)) // Slight tint
+            
+            if !director.isRunning {
+                 VStack {
                     Image(systemName: "video.slash")
                         .font(.largeTitle)
                         .padding()
-                    Text(director.isRunning ? AppConstants.UI.waitingForVideo : "SESSION ENDED")
+                    Text("SESSION ENDED")
                         .font(.caption)
                         .tracking(2.0)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.8)) // Explicit background
+                .background(Color.black.opacity(0.8))
                 .edgesIgnoringSafeArea(.all)
                 .foregroundColor(.white)
             }
@@ -129,23 +122,9 @@ public struct CockpitView: View {
                     
                     // Center Controls
                     HStack(spacing: 20) {
-                        // AI Trigger Button
-                        Button(action: {
-                            analyzeFrame()
-                        }) {
-                            VStack {
-                                Image(systemName: isAnalyzing ? "camera.aperture" : "camera.viewfinder")
-                                    .font(.title)
-                                    .foregroundColor(isAnalyzing ? .yellow : .white)
-                                Text(isAnalyzing ? AppConstants.UI.checking : AppConstants.UI.sceneCheck)
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                            }
-                            .frame(width: 80, height: 80)
-                            .background(Circle().fill(Color.white.opacity(0.1)))
-                        }
-                        .disabled(isAnalyzing)
+                        // AI Trigger Button REMOVED (Legacy Frame Analysis)
+                        // If we want manual snapshots later, we need to reimplement snapshot() in DirectorService
+                        // using AVCaptureVideoDataOutput alongside MovieFileOutput. 
                         
                         // Drive Control Button (Start/End)
                         Button(action: {
@@ -176,7 +155,7 @@ public struct CockpitView: View {
                                 Task {
                                     // Simulate a short drive to test the Narrative Agent
                                     print("🧪 Triggering Narrative Test with Gemini 3...")
-                                    onEndDrive?(SimulationData.driveEvents, [])
+                                    onEndDrive?(SimulationData.driveEvents, [], [])
                                 }
                             }) {
                                 VStack {
@@ -219,57 +198,70 @@ public struct CockpitView: View {
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .background {
-                print("📱 App Backgrounded. Invalidating preview to prevent zombie frames.")
-                // If not running, ensure next launch shows "Session Ended" cleanly
-                if !director.isRunning {
-                    director.lastFrame = nil
-                }
-                // If running, we keep it, assuming background task might keep it alive,
-                // or we accept the risk. For safety, let's clear it if not crucial.
+                print("📱 App Backgrounded. Stopping active clips.")
+                // Should we stop session? Or just clip?
+                // Director handles backgrounding logic internally if needed, 
+                // but actually Director needs to know.
+                // We added handleBackgrounding() to Director. Let's call it.
+                director.handleBackgrounding()
+            } else if newPhase == .active {
+                // Foreground
+                director.handleForegrounding()
             }
         }
     }
     
     // MARK: - Actions
-    
-    private func analyzeFrame() {
-        guard let data = director.snapshot() else {
-            print("❌ No frame to analyze")
-            return
-        }
-        
-        isAnalyzing = true
-        lastAnalysis = "Capturing..."
-        
-        Task {
-            do {
-                let description = try await aiService.generateDescription(from: data, location: nil)
-                await MainActor.run {
-                    withAnimation {
-                        self.lastAnalysis = description
-                        self.isAnalyzing = false
-                        // LOG EVENT FOR NARRATIVE
-                        self.director.logEvent(description)
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    self.lastAnalysis = "Error: Check API Key"
-                    self.isAnalyzing = false
-                }
-            }
-        }
-    }
+    // analyzeFrame Removed
     
     private func finishDrive() {
         director.stopSession() // Stop camera and location
         let result = director.finishDrive()
-        onEndDrive?(result.events, result.route)
+        onEndDrive?(result.events, result.route, result.videoClips)
     }
 }
 
 struct CockpitView_Previews: PreviewProvider {
     static var previews: some View {
-        CockpitView(director: DirectorService(videoSource: MockCameraSource()), aiService: GeminiService())
+        CockpitView(director: DirectorService(), aiService: GeminiService())
     }
 }
+// MARK: - Camera Preview (UIViewRepresentable)
+#if os(iOS)
+struct CameraPreview: UIViewRepresentable {
+    let session: AVCaptureSession
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.backgroundColor = .black
+        
+        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.frame = view.bounds
+        view.layer.addSublayer(previewLayer)
+        
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {
+        if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
+            previewLayer.frame = uiView.bounds
+            previewLayer.session = session
+        }
+    }
+}
+#elseif os(macOS)
+// macOS fallback
+struct CameraPreview: NSViewRepresentable {
+    let session: AVCaptureSession
+    
+    func makeNSView(context: Context) -> NSView {
+         let view = NSView(frame: .zero)
+         view.wantsLayer = true
+         view.layer?.backgroundColor = NSColor.black.cgColor
+         return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+#endif

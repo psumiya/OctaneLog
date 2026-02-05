@@ -28,7 +28,7 @@ final class NarrativeRouteTests: XCTestCase {
     }
     
     func testDirectorServiceRouteAccumulation() {
-        let director = DirectorService(videoSource: MockCameraSource())
+        let director = DirectorService() // No args now
         // Start session to enable monitoring (mocked)
         // Since we can't easily mock CoreLocation updates from here without refactoring DirectorService to accept a mock LocationService,
         // we will verify the finishDrive() signature and basic state.
@@ -45,7 +45,7 @@ final class NarrativeRouteTests: XCTestCase {
             RoutePoint(latitude: 37.0, longitude: -122.0, timestamp: Date())
         ]
         
-        _ = await agent.processDrive(events: ["Drive Started"], route: route)
+        _ = await agent.processDrive(events: ["Drive Started"], route: route, videoClips: [])
         
         let season = await seasonManager.loadSeason()
         guard let savedEpisode = season.episodes.last else {

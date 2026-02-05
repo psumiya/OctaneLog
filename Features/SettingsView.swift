@@ -4,6 +4,8 @@ public struct SettingsView: View {
     @State private var apiKey: String = ""
     @AppStorage("user_gemini_api_key") private var storedKey: String = ""
     @AppStorage("isDeveloperMode") private var isDeveloperMode: Bool = false
+    @AppStorage(AppConstants.Settings.uploadOverWifiOnly) private var uploadOverWifiOnly: Bool = true
+    @AppStorage(AppConstants.Settings.videoQuality) private var videoQuality: String = "480p"
     @State private var isKeyVisible = false
     
     public init() {}
@@ -75,6 +77,20 @@ public struct SettingsView: View {
                                 .foregroundColor(.red)
                         }
                     }
+                }
+                
+                Section(header: Text("Video Configuration")) {
+                    Toggle("Upload over WiFi Only", isOn: $uploadOverWifiOnly)
+                    
+                    Picker("Video Quality", selection: $videoQuality) {
+                        Text("480p (Data Saver)").tag("480p")
+                        Text("720p (Standard)").tag("720p")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    
+                    Text("Higher quality usage more data and storage.")
+                        .font(.caption)
+                        .foregroundColor(.gray)
                 }
                 
                 Section(header: Text("Developer Options")) {

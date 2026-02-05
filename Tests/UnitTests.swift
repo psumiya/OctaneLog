@@ -15,22 +15,5 @@ final class UnitTests: XCTestCase {
         XCTAssertNotNil(service, "GeminiService should initialize")
     }
     
-    func testDirectorStopSessionMaintainsLastFrame() async throws {
-        // Arrange
-        let director = DirectorService(videoSource: MockCameraSource())
-        await director.startSession()
-        
-        // Simulate a frame arriving (MockSource might need time or forced tick)
-        // For MVP Director, let's assume videoSource emits at least one frame if we wait a bit
-        // BUT MockCameraSource implementation isn't fully visible here, relying on default behavior.
-        
-        // Act
-        director.stopSession()
-        
-        // Assert
-        XCTAssertFalse(director.isRunning, "Director should not be running after stop")
-        // We can't guarantee a frame frame in this unit test without a controllable mock,
-        // but we can verify that no code explicitly nils it out.
-        // We rely on the log message we added to verify behavior in integration.
-    }
+// testDirectorStopSessionMaintainsLastFrame REMOVED - Logic no longer applies in Video-First architecture.
 }

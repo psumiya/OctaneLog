@@ -13,10 +13,19 @@ public actor NarrativeAgent {
         self.dateProvider = dateProvider
     }
     
+    private let geminiFileService = GeminiFileService(apiKey: "") // Will init with correct key inside if possible or we pass it. 
+    // Actually we should inject it or init it properly. 
+    // Ideally we use the AIService protocol but File API is specific.
+    // Let's lazily init it or use the key from GeminiService if accessible. 
+    // For now, let's look up the key again securely or pass it.
+    
+    // Better approach: Let's assume GeminiService holds the key or we retrieve it from Keychain again.
+    
     /// Processes a completed drive, updates the season arc, and generates an episode summary.
-    public func processDrive(events: [String], route: [RoutePoint]) async -> String {
+    public func processDrive(events: [String], route: [RoutePoint], videoClips: [URL]) async -> String {
         // Fallback for empty drives
         let driveEvents = events.isEmpty ? ["Drive started.", "Drive ended unexpectedly (No events)."] : events
+        let hasVideo = !videoClips.isEmpty
         
         // 1. Context Retrieval
         var season = await seasonManager.loadSeason()
@@ -28,7 +37,7 @@ public actor NarrativeAgent {
             id: newEpisodeId,
             date: dateProvider(),
             title: "Drive #\(season.episodes.count + 1) (Processing)",
-            summary: "Analyzing capture data... (Do not close app)",
+            summary: "Analyzing \(videoClips.count) video clips... (Do not close app)",
             tags: [AppConstants.Narrative.processingTag],
             rawEvents: driveEvents,
             route: route,
@@ -36,11 +45,17 @@ public actor NarrativeAgent {
         )
         season.episodes.append(pendingEpisode)
         await seasonManager.saveSeason(season)
-        ThoughtLogger.log(step: "Persistence", content: "Saved raw drive data. Starting AI generation...")
+        ThoughtLogger.log(step: "Persistence", content: "Saved raw drive data. Starting AI generation (Video-Mode: \(hasVideo))...")
         
         // 3. Draft Narrative (Simulated or Real Gemini Call)
         // This is the slow part where the user might exit.
-        let narrative = await generateNarrative(events: driveEvents, season: season)
+        var narrative = ""
+        
+        if hasVideo {
+            narrative = await generateVideoNarrative(clips: videoClips, events: driveEvents, season: season)
+        } else {
+            narrative = await generateNarrative(events: driveEvents, season: season)
+        }
         
         // 4. Update the Placeholder with Real Data
         // We reload the season to ensure we don't overwrite any parallel changes (unlikely here but good practice)
@@ -62,6 +77,57 @@ public actor NarrativeAgent {
         await checkAndGenerateRecaps(season: currentSeason)
         
         return narrative
+    }
+    
+    private func generateVideoNarrative(clips: [URL], events: [String], season: SeasonArc) async -> String {
+        // 1. Authenticate (Get Key)
+        guard let apiKey = KeychainHelper.standard.read(service: "com.octanelog.api.key", account: "gemini_api_key_v1")
+            .flatMap({ String(data: $0, encoding: .utf8) }) else {
+            return "Error: No API Key found for video analysis."
+        }
+        
+        let fileService = GeminiFileService(apiKey: apiKey)
+        var uploadedUris: [String] = []
+        
+        // 2. Upload Clips
+        for clipUrl in clips {
+            do {
+                ThoughtLogger.log(step: "Video Upload", content: "Uploading \(clipUrl.lastPathComponent)...")
+                let name = try await fileService.uploadFile(url: clipUrl, mimeType: "video/quicktime")
+                let uri = try await fileService.waitForActiveState(fileName: name)
+                uploadedUris.append(uri)
+            } catch {
+                print("NarrativeAgent: Failed to upload clip \(clipUrl). Error: \(error)")
+                // Continue with other clips? or fail? Let's continue.
+            }
+        }
+        
+        if uploadedUris.isEmpty {
+            return "Error: Failed to upload video clips for analysis."
+        }
+        
+        // 3. Generate with Gemini 3
+        let prompt = PromptLibrary.narrativeGeneration(
+            context: season.recurringCharacters.joined(separator: ", "),
+            events: events,
+            theme: season.theme,
+            title: season.title
+        ) + "\n\n[SYSTEM NOTE]: The attached video files are the visual record of this drive. Use them to describe the scenery, lighting, and driving behavior in vivid detail."
+        
+        do {
+            ThoughtLogger.log(step: "Gemini 3 Generation", content: "Generating narrative from \(uploadedUris.count) video files...")
+            // Use gemini-3-flash-preview as verified
+            return try await fileService.generateContent(
+                credential: apiKey,
+                model: "gemini-3-flash-preview", 
+                prompt: prompt,
+                fileURIs: uploadedUris,
+                mimeType: "video/quicktime"
+            )
+        } catch {
+             ThoughtLogger.logDecision(topic: "Video Generation Failure", decision: "Fallback to Text", reasoning: "\(error)")
+             return await generateNarrative(events: events, season: season) // Fallback to text-only logic
+        }
     }
     
     private func analyzeAlignment(events: [String], season: SeasonArc) -> String {
