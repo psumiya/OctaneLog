@@ -57,6 +57,14 @@ public class DirectorService: NSObject {
     
     public func startSession() async {
         print("Director: Starting Session...")
+        
+        // Check Camera Permissions first
+        let authorized = await checkCameraPermission()
+        guard authorized else {
+            print("Director: Camera access denied or restricted.")
+            return
+        }
+        
         self.currentDriveID = UUID() // New Drive ID
         self.recordedClips.removeAll()
         
@@ -79,6 +87,18 @@ public class DirectorService: NSObject {
         await MainActor.run {
             self.isRunning = true
             self.logEvent("Drive started at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))")
+        }
+    }
+    
+    private func checkCameraPermission() async -> Bool {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized:
+            return true
+        case .notDetermined:
+            return await AVCaptureDevice.requestAccess(for: .video)
+        default:
+            return false
         }
     }
     
