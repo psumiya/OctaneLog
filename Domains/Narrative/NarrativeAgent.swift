@@ -22,7 +22,7 @@ public actor NarrativeAgent {
     // Better approach: Let's assume GeminiService holds the key or we retrieve it from Keychain again.
     
     /// Processes a completed drive, updates the season arc, and generates an episode summary.
-    public func processDrive(events: [String], route: [RoutePoint], videoClips: [URL]) async -> String {
+    public func processDrive(events: [String], route: [RoutePoint], videoClips: [URL], visionAnalyses: [VisionAnalyzer.DriveAnalysis] = []) async -> String {
         // Fallback for empty drives
         let driveEvents = events.isEmpty ? ["Drive started.", "Drive ended unexpectedly (No events)."] : events
         let hasVideo = !videoClips.isEmpty
@@ -52,7 +52,7 @@ public actor NarrativeAgent {
         var narrative = ""
         
         if hasVideo {
-            narrative = await generateVideoNarrative(clips: videoClips, events: driveEvents, season: season)
+            narrative = await generateVideoNarrative(clips: videoClips, events: driveEvents, season: season, visionAnalyses: visionAnalyses)
         } else {
             narrative = await generateNarrative(events: driveEvents, season: season)
         }
@@ -79,17 +79,57 @@ public actor NarrativeAgent {
         return narrative
     }
     
-    private func generateVideoNarrative(clips: [URL], events: [String], season: SeasonArc) async -> String {
+    private func generateVideoNarrative(clips: [URL], events: [String], season: SeasonArc, visionAnalyses: [VisionAnalyzer.DriveAnalysis]) async -> String {
         // 1. Authenticate (Get Key)
         guard let apiKey = KeychainHelper.standard.read(service: "com.octanelog.api.key", account: "gemini_api_key_v1")
             .flatMap({ String(data: $0, encoding: .utf8) }) else {
             return "Error: No API Key found for video analysis."
         }
         
+        // 2. Build Vision Analysis Summary
+        var visionSummary = ""
+        if !visionAnalyses.isEmpty {
+            ThoughtLogger.log(step: "Local Analysis", content: "Processing \(visionAnalyses.count) video clips with Vision framework...")
+            
+            var allObjects = Set<String>()
+            var allScenes = Set<String>()
+            var avgBrightness: Double = 0
+            
+            for analysis in visionAnalyses {
+                allObjects.formUnion(analysis.detectedObjects)
+                allScenes.formUnion(analysis.sceneTypes)
+                avgBrightness += analysis.averageBrightness
+            }
+            
+            avgBrightness /= Double(visionAnalyses.count)
+            let timeOfDay = visionAnalyses.first?.timeOfDay ?? "Unknown"
+            
+            visionSummary = """
+            
+            [LOCAL VISION ANALYSIS]:
+            - Time of Day: \(timeOfDay)
+            - Detected Objects: \(Array(allObjects).prefix(15).joined(separator: ", "))
+            - Scene Types: \(Array(allScenes).joined(separator: ", "))
+            - Lighting: \(String(format: "%.0f", avgBrightness * 100))% brightness
+            """
+            
+            ThoughtLogger.log(step: "Vision Summary", content: visionSummary)
+        }
+        
+        // 3. Decide: Upload video or use Vision-only?
+        // For short drives (<2 min) or if Vision found interesting content, upload video
+        let shouldUploadVideo = clips.count <= 2 || !visionAnalyses.isEmpty
+        
+        if !shouldUploadVideo {
+            // Use Vision analysis only (faster, cheaper)
+            ThoughtLogger.log(step: "Smart Mode", content: "Using Vision-only analysis (no video upload)")
+            return await generateNarrative(events: events + [visionSummary], season: season)
+        }
+        
         let fileService = GeminiFileService(apiKey: apiKey)
         var uploadedUris: [String] = []
         
-        // 2. Upload Clips
+        // 4. Upload Clips (only if needed)
         for (index, clipUrl) in clips.enumerated() {
             do {
                 ThoughtLogger.log(step: "Video Upload", content: "Uploading clip \(index + 1)/\(clips.count): \(clipUrl.lastPathComponent)...")
@@ -106,20 +146,20 @@ public actor NarrativeAgent {
         }
         
         if uploadedUris.isEmpty {
-            ThoughtLogger.log(step: "Upload Failed", content: "All video uploads failed. Falling back to text-only narrative.")
-            return "Error: Failed to upload video clips for analysis. Falling back to text-only mode."
+            ThoughtLogger.log(step: "Upload Failed", content: "All video uploads failed. Using Vision analysis only.")
+            return await generateNarrative(events: events + [visionSummary], season: season)
         }
         
-        // 3. Generate with Gemini 3
+        // 5. Generate with Gemini 3 (Video + Vision metadata)
         let prompt = PromptLibrary.narrativeGeneration(
             context: season.recurringCharacters.joined(separator: ", "),
             events: events,
             theme: season.theme,
             title: season.title
-        ) + "\n\n[SYSTEM NOTE]: The attached video files are the visual record of this drive. Use them to describe the scenery, lighting, and driving behavior in vivid detail."
+        ) + visionSummary + "\n\n[SYSTEM NOTE]: The attached video files are the visual record of this drive. Use them along with the Vision analysis to describe the scenery, lighting, and driving behavior in vivid detail."
         
         do {
-            ThoughtLogger.log(step: "Gemini 3 Generation", content: "Generating narrative from \(uploadedUris.count) video files...")
+            ThoughtLogger.log(step: "Gemini 3 Generation", content: "Generating narrative from \(uploadedUris.count) video files + Vision analysis...")
             // Use gemini-3-flash-preview as verified
             return try await fileService.generateContent(
                 credential: apiKey,
@@ -129,8 +169,8 @@ public actor NarrativeAgent {
                 mimeType: "video/quicktime"
             )
         } catch {
-             ThoughtLogger.logDecision(topic: "Video Generation Failure", decision: "Fallback to Text", reasoning: "\(error)")
-             return await generateNarrative(events: events, season: season) // Fallback to text-only logic
+             ThoughtLogger.logDecision(topic: "Video Generation Failure", decision: "Fallback to Vision-only", reasoning: "\(error)")
+             return await generateNarrative(events: events + [visionSummary], season: season)
         }
     }
     

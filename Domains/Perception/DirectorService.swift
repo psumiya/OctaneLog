@@ -11,6 +11,7 @@ import UIKit
 @Observable
 public class DirectorService: NSObject {
     public let locationService = LocationService()
+    public let visionAnalyzer = VisionAnalyzer()
     
     // Live Diagnostics for UI
     public var isRunning = false
@@ -245,6 +246,23 @@ public class DirectorService: NSObject {
         self.currentDriveID = nil
         
         return (capturedEvents, capturedRoute, clips)
+    }
+    
+    /// Analyzes video clips using Vision framework to extract metadata
+    /// This is called by NarrativeAgent to get local analysis before sending to Gemini
+    public func analyzeVideoClips(_ clips: [URL]) async -> [VisionAnalyzer.DriveAnalysis] {
+        var analyses: [VisionAnalyzer.DriveAnalysis] = []
+        
+        for clip in clips {
+            do {
+                let analysis = try await visionAnalyzer.analyzeVideo(url: clip, sampleInterval: 5.0)
+                analyses.append(analysis)
+            } catch {
+                print("Director: Failed to analyze clip \(clip.lastPathComponent): \(error)")
+            }
+        }
+        
+        return analyses
     }
 }
 

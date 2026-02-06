@@ -5,10 +5,11 @@
 > Converting seconds of mundane life into a grand narrative.
 
 ## Vision
-**OctaneLog** is an iOS application that uses Multimodal AI (Gemini 3 Flash & Pro) to autonomously capture, analyze, and narrate your life on the road.
+**OctaneLog** is an iOS application that uses on-device Vision AI and Gemini 3 to capture, analyze, and narrate your life on the road.
 
-- **The Director (Flash)**: Watches the road and autonomously clips "Hidden Gems" (Classic Cars, Scenery).
-- **The Editor (Pro)**: Synthesizes these moments into a Daily Episode and Yearly Saga.
+- **The Director**: Continuously records your drive and uses Apple's Vision framework to analyze scenery, lighting, and objects in real-time.
+- **The Editor (Gemini 3 Flash)**: Combines video footage with local Vision analysis to generate vivid narrative summaries of your drives.
+- **Smart Processing**: For short drives, uploads full video. For longer drives, sends Vision metadata + key clips to reduce upload time and cost.
 
 ## Architecture
 - **Perception Domain**: Hardware-abstracted Camera logic (`VideoSourceProtocol`) & Real-time AI analysis.

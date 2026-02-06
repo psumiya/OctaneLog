@@ -30,7 +30,10 @@ public struct RootView: View {
                     }
                     #endif
                     
-                    let summary = await narrativeAgent.processDrive(events: events, route: route, videoClips: clips)
+                    // Analyze videos locally with Vision framework first
+                    let visionAnalyses = await director.analyzeVideoClips(clips)
+                    
+                    let summary = await narrativeAgent.processDrive(events: events, route: route, videoClips: clips, visionAnalyses: visionAnalyses)
                     
                     await MainActor.run {
                         self.generatedNarrative = summary
