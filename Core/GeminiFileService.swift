@@ -104,7 +104,9 @@ public actor GeminiFileService {
         print("GeminiFileService: Polling state for \(fileName)...")
         
         var attempts = 0
-        while attempts < 30 { // 30 seconds max
+        var sleepDuration: UInt64 = 1_000_000_000 // Start with 1s
+        
+        while attempts < 60 { // Increased to 60 attempts (up to ~2 minutes with backoff)
             let (data, _) = try await session.data(from: url)
             
             struct FileStatus: Decodable {
@@ -114,18 +116,26 @@ public actor GeminiFileService {
             }
             
             if let status = try? JSONDecoder().decode(FileStatus.self, from: data) {
+                print("GeminiFileService: File state: \(status.state)")
                 if status.state == "ACTIVE" {
                     print("GeminiFileService: File is ACTIVE. Ready for use.")
                     return status.uri
                 } else if status.state == "FAILED" {
+                    print("GeminiFileService: File processing FAILED.")
                     throw URLError(.cannotParseResponse)
                 }
             }
             
-            try await Task.sleep(nanoseconds: 1 * 1_000_000_000) // Sleep 1s
+            try await Task.sleep(nanoseconds: sleepDuration)
             attempts += 1
+            
+            // Exponential backoff: 1s, 2s, 2s, 2s...
+            if attempts < 3 {
+                sleepDuration = min(sleepDuration * 2, 2_000_000_000)
+            }
         }
         
+        print("GeminiFileService: Timeout waiting for file to become ACTIVE after \(attempts) attempts.")
         throw URLError(.timedOut)
     }
     

@@ -67,10 +67,18 @@ public class DirectorService: NSObject {
         
         self.currentDriveID = UUID() // New Drive ID
         self.recordedClips.removeAll()
+        self.events.removeAll()
+        self.currentRoute.removeAll()
         
-        // Start Location (Must be on Main Thread)
+        // Start Location (Must be on Main Thread) and wait for authorization
         await MainActor.run {
             self.locationService.requestPermission()
+        }
+        
+        // Give location service a moment to process permission
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+        
+        await MainActor.run {
             self.locationService.startMonitoring()
         }
         
@@ -91,6 +99,8 @@ public class DirectorService: NSObject {
             self.isRunning = true
             self.logEvent("Drive started at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))")
         }
+        
+        print("Director: Session started. Location authorized: \(self.locationService.isAuthorized)")
     }
     
     private func checkCameraPermission() async -> Bool {
@@ -187,8 +197,9 @@ public class DirectorService: NSObject {
     private func handleLocationUpdate(location: CLLocation, state: DriveState) {
         let now = Date()
         
-        // Track Route (Relaxed Accuracy for Urban Environments)
-        if location.horizontalAccuracy < 200 {
+        // Track Route (Relaxed Accuracy - accept initial GPS fixes)
+        // Urban environments often have 200-500m accuracy initially
+        if location.horizontalAccuracy > 0 && location.horizontalAccuracy < 500 {
             self.currentRoute.append(RoutePoint(
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude,
@@ -226,6 +237,8 @@ public class DirectorService: NSObject {
         let capturedEvents = self.events
         let capturedRoute = self.currentRoute
         let clips = self.recordedClips
+        
+        print("Director: Finishing drive - \(capturedEvents.count) events, \(capturedRoute.count) route points, \(clips.count) video clips")
         
         self.events.removeAll()
         self.currentRoute.removeAll()

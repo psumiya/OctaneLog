@@ -90,20 +90,24 @@ public actor NarrativeAgent {
         var uploadedUris: [String] = []
         
         // 2. Upload Clips
-        for clipUrl in clips {
+        for (index, clipUrl) in clips.enumerated() {
             do {
-                ThoughtLogger.log(step: "Video Upload", content: "Uploading \(clipUrl.lastPathComponent)...")
+                ThoughtLogger.log(step: "Video Upload", content: "Uploading clip \(index + 1)/\(clips.count): \(clipUrl.lastPathComponent)...")
                 let name = try await fileService.uploadFile(url: clipUrl, mimeType: "video/quicktime")
+                ThoughtLogger.log(step: "Video Processing", content: "Waiting for clip \(index + 1) to be ready...")
                 let uri = try await fileService.waitForActiveState(fileName: name)
                 uploadedUris.append(uri)
+                ThoughtLogger.log(step: "Video Ready", content: "Clip \(index + 1) ready for analysis.")
             } catch {
                 print("NarrativeAgent: Failed to upload clip \(clipUrl). Error: \(error)")
-                // Continue with other clips? or fail? Let's continue.
+                ThoughtLogger.log(step: "Upload Error", content: "Failed to upload \(clipUrl.lastPathComponent): \(error.localizedDescription)")
+                // Continue with other clips
             }
         }
         
         if uploadedUris.isEmpty {
-            return "Error: Failed to upload video clips for analysis."
+            ThoughtLogger.log(step: "Upload Failed", content: "All video uploads failed. Falling back to text-only narrative.")
+            return "Error: Failed to upload video clips for analysis. Falling back to text-only mode."
         }
         
         // 3. Generate with Gemini 3
