@@ -14,7 +14,6 @@ public class DirectorService: NSObject {
     
     // Live Diagnostics for UI
     public var isRunning = false
-    public var frameCount = 0 // Used to mock activity in UI if needed
     
     // Video Recording
     public let captureSession = AVCaptureSession()

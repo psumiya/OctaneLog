@@ -109,17 +109,7 @@ public struct CockpitView: View {
                 
                 // Bottom stats
                 HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("FRAMES")
-                            .font(.caption2)
-                            .foregroundColor(.gray)
-                        Text("\(director.frameCount)")
-                            .font(.system(.title3, design: .monospaced))
-                            .foregroundColor(.green)
-                    }
-                    
-                    Spacer()
-                    
+
                     // Center Controls
                     HStack(spacing: 20) {
                         // AI Trigger Button REMOVED (Legacy Frame Analysis)
