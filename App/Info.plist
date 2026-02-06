@@ -14,6 +14,8 @@
     <string>OctaneLog uses your location to adjust video capture frequency based on your speed.</string>
     <key>NSCameraUsageDescription</key>
     <string>OctaneLog uses the camera to capture video for autonomous road analysis.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>OctaneLog needs your location to track your route and speed even when the screen is off.</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UIBackgroundModes</key>

@@ -68,9 +68,12 @@ public class DirectorService: NSObject {
         self.currentDriveID = UUID() // New Drive ID
         self.recordedClips.removeAll()
         
-        // Start Location
-        self.locationService.requestPermission()
-        self.locationService.startMonitoring()
+        // Start Location (Must be on Main Thread)
+        await MainActor.run {
+            self.locationService.requestPermission()
+            self.locationService.startMonitoring()
+        }
+        
         self.setupLocationObserver()
         
         // Start Camera Flow
@@ -184,8 +187,8 @@ public class DirectorService: NSObject {
     private func handleLocationUpdate(location: CLLocation, state: DriveState) {
         let now = Date()
         
-        // Track Route (High Accuracy)
-        if location.horizontalAccuracy < 50 {
+        // Track Route (Relaxed Accuracy for Urban Environments)
+        if location.horizontalAccuracy < 200 {
             self.currentRoute.append(RoutePoint(
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude,
