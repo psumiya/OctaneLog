@@ -8,13 +8,12 @@
 **OctaneLog** is an iOS application that uses on-device Vision AI and Gemini 3 to capture, analyze, and narrate your life on the road.
 
 - **The Director**: Continuously records your drive and uses Apple's Vision framework to analyze scenery, lighting, and objects in real-time.
-- **The Editor (Gemini 3 Flash)**: Combines video footage with local Vision analysis to generate vivid narrative summaries of your drives.
-- **Smart Processing**: For short drives, uploads full video. For longer drives, sends Vision metadata + key clips to reduce upload time and cost.
+- **The Editor (Gemini 3)**: Combines video footage with local Vision analysis to generate vivid narrative summaries of your drives.
+- **Smart Processing**: Intelligently uploads driving footage to Gemini when local Vision analysis detects significant events or scenery, ensuring high-quality narration.
 
 ## Architecture
 - **Perception Domain**: Hardware-abstracted Camera logic (`VideoSourceProtocol`) & Real-time AI analysis.
-- **Narrative Domain**: Generative text synthesis.
-- **Identity Domain**: User profiles and vehicle metadata.
+- **Narrative Domain**: Generative text synthesis and data persistence (`SeasonManager`).
 
 ## Privacy & Data Safety
 
@@ -22,13 +21,13 @@ OctaneLog is designed to be **Privacy Aware**.
 
 - **Bring Your Own Key (BYOK)**: *Default Configuration*. Currently, you use your own Google Gemini API Key. Your data is processed under your personal or enterprise agreement with Google.
 - **Smart Redaction**: The "Director" agent is explicitly prompted to **ignore** license plates, faces, and specific street numbers, focusing strictly on vehicle types, scenery, and driving dynamics.
-- **Local Narrative**: Location coordinates are sent to Gemini *only* for context (e.g., to identify "Golden Gate Bridge" vs "A Red Bridge"). The raw GPS history is not tracked or sold; only the generated text stories (the "Saga") are saved locally on your device.
+- **Local Narrative & Data**: Location coordinates are sent to Gemini *only* for context (e.g., to identify "Golden Gate Bridge" vs "A Red Bridge"). The raw GPS history (Route) and the generated text stories (the "Saga") are saved locally on your device. You own your data.
 - **Background Autonomy**: The app requires "Always" location permission to autonomously detect and log drives even when the phone is locked. This telemetry is processed locally to determine drive state (Stationary vs Cruising) and is never uploaded to a cloud server.
 
 
 ## Directory Structure
 - `App/`: Main App Entry point.
-- `Domains/`: Core Logic separated by Domain (Perception, Narrative, Identity).
+- `Domains/`: Core Logic separated by Domain (Perception, Narrative).
 - `Features/`: SwiftUI Views and Feature logic.
 - `Core/`: Shared Utilities.
 
@@ -65,35 +64,18 @@ swift test
 
 ### Option 3: Run on Device (Detailed)
 ### Run on Simulator or Device
-Because this is a **Swift Package Logic Library**, you must create a standard Xcode "Host App" to run it visually.
+Since `OctaneLog` is a Swift Package Logic Library, we include a "Host App" called `OctaneRunner` to run it visually.
 
-1.  **Create App**:
-    -   Xcode -> **File > New > Project** -> **iOS App**.
-    -   Name it `OctaneRunner`.
-    -   Save it next to this folder.
+1.  **Open Project**:
+    -   Navigate to `OctaneRunner/` folder.
+    -   Open `OctaneRunner.xcodeproj`.
 
-2.  **Add Package**:
-    -   Type `OctaneLog` in the search bar (if it appears locally) OR just drag the `OctaneLog` folder into your new project's file list.
-    -   Add `OctaneLogCore` framework to your App Target's "Frameworks, Libraries, and Embedded Content".
+2.  **Run**:
+    -   Select your physical device or a simulator.
+    -   Hit Play (Command + R).
+    -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted).
 
-3.  **App Code**:
-    -   Replace the contents of `OctaneRunnerApp.swift` with:
-    ```swift
-    import SwiftUI
-    import OctaneLogCore
-
-    @main
-    struct OctaneRunnerApp: App {
-        @State var director = DirectorService()
-        var body: some Scene {
-            WindowGroup {
-                CockpitView(director: director)
-            }
-        }
-    }
-    ```
-4.  **Run**: Hit Play. This works 100% of the time.
-    -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted, usually "Personal Team" works automatically).
+> **Note**: Audio recording is disabled by default for privacy. Video is analyzed but only uploaded if you configure your API key.
 
 ### Troubleshooting
 
