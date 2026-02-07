@@ -80,33 +80,7 @@ public class GeminiService {
         }
     }
     
-    /// Generates a description using the Fast model (Flash).
-    public func generateDescription(from imageData: Data, location: CLLocation? = nil) async throws -> String {
-        guard let client = fastClient else {
-            throw GeminiError.notConfigured
-        }
-        
-        do {
-            // Standard prompt for scene description from PromptLibrary.
-            let promptText = PromptLibrary.sceneDescription(location: location)
-            
-            // gemini-3.0-flash is multimodal.
-            let contentStream = client.generateContentStream(promptText, ModelContent.Part.jpeg(imageData))
-            
-            var fullText = ""
-            for try await chunk in contentStream {
-                if let text = chunk.text {
-                    fullText += text
-                }
-            }
-            
-            return fullText.isEmpty ? "No description generated." : fullText
-            
-        } catch {
-            print("GeminiService Vision Error: \(error)")
-            throw error
-        }
-    }
+
 }
 
 

@@ -67,7 +67,5 @@ class MockAIService: AIService {
         return "Mock Narrative"
     }
     
-    func generateDescription(from imageData: Data, location: CLLocation?) async throws -> String {
-        return "Mock Description"
-    }
+
 }

@@ -50,7 +50,17 @@ struct VerifyGemini3Video {
             
             // 5. Generate
             print("\n🧠 Generating content with Gemini 3 Flash Preview...")
-            let prompt = "Describe this image."
+            
+            // Use the actual PromptLibrary to verify the privacy instruction is included
+            let prompt = PromptLibrary.narrativeGeneration(
+                context: "Test Context", 
+                events: ["Drive Started", "Stopped at light", "Drive Ended"], 
+                theme: "Discovery", 
+                title: "Test Drive"
+            ) + "\n\n[SYSTEM NOTE]: Describe this image as if it were a frame from the drive."
+
+            print("📝 Testing with Prompt:\n\(prompt)\n")
+
             let response = try await service.generateContent(
                 credential: apiKey, 
                 model: "gemini-3-flash-preview", 

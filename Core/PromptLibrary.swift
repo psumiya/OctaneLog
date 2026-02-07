@@ -8,39 +8,16 @@ public struct PromptLibrary {
     /// Prompt for analyzing a drive and generating a narrative log entry.
     public static func narrativeGeneration(context: String, events: [String], theme: String, title: String) -> String {
         return """
-        You are the AI Co-Pilot for the 'OctaneLog' series.
-        Your goal is to turn raw drive events into a short, compelling narrative log entry.
+        Analyze this video for the 'OctaneLog' series as my spirited AI Co-Pilot. Write a 2-paragraph narrative on the 'feel' and transition of the drive, followed by bulleted 'Co-Pilot Notes' on technical maneuvers and landmarks. 
         
-        The current Season Theme is: \(theme).
-        Previous context: \(context).
+        STRICT PRIVACY RULE: Do not mention, transcribe, or approximate license plates, specific street numbers, or exact addresses. Use general descriptors (e.g., 'a silver sedan,' 'the local grocery hub,' or 'a major intersection') to maintain total anonymity while capturing the drive's character.
         
-        New Drive Events (Sequential):
+        (Telemetry Events for Reference):
         \(events.map { "- \($0)" }.joined(separator: "\n"))
-        
-        Task: Write a narrative log entry for this drive.
-        
-        Experience Guidelines:
-        1. ROLE: You are an analytical but spirited co-pilot. You love driving.
-        2. TONE: Engaging, automotive, observant. Avoid being dry or robotic.
-        3. CONTENT: Focus on the "feel" of the drive based on the events. If it was a short stationary test, acknowledge it with a bit of wit.
-        4. CAUSALITY: Connect the events naturally.
-        5. LENGTH: Dynamic. 
-           - For short/routine drives: Keep it to a concise paragraph (3-5 sentences).
-           - For long/epic drives: Expand to 2-3 paragraphs. adapt the depth of the narrative to the richness of the drive events.
         """
     }
     
-    /// Prompt for describing a scene from an image.
-    public static func sceneDescription(location: CLLocation?) -> String {
-        var basePrompt = "Describe the scene concisely. Do NOT capture or transcribe license plates, faces, or specific street numbers. Focus on vehicle types, traffic flow, and environment."
-        
-        if let loc = location {
-             basePrompt += " Context: Coordinates \(loc.coordinate.latitude), \(loc.coordinate.longitude)."
-        }
-        
-        return basePrompt
-    }
-    
+
     /// Generates a high-level recap for a specific time period.
     public static func periodicRecap(context: String, episodes: [Episode], periodType: String) -> String {
         let episodeLog = episodes.map { "- \($0.date.formatted(date: .numeric, time: .omitted)): \($0.summary)" }.joined(separator: "\n")

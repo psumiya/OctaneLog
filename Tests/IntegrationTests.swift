@@ -6,15 +6,13 @@ import CoreLocation
 
 class IntegrationMockAIService: AIService {
     var generatedTextResponse: String = "Mocked AI Response"
-    var generateDescriptionResponse: String = "Mocked Description"
+
     
     func generateText(prompt: String) async throws -> String {
         return generatedTextResponse
     }
     
-    func generateDescription(from imageData: Data, location: CLLocation?) async throws -> String {
-        return generateDescriptionResponse
-    }
+
 }
 
 // MARK: - Integration Tests

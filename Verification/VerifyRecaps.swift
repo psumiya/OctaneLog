@@ -19,9 +19,7 @@ class MockAIService: AIService {
         fatalError("Not implemented")
     }
     
-    func generateDescription(from imageData: Data, location: CLLocation?) async throws -> String {
-        return "Mock Scene Description"
-    }
+
 }
 
 class MockDateProvider {

@@ -17,12 +17,7 @@ class NarrativeMockAI: AIService {
         return cannedResponse
     }
     
-    func generateDescription(from imageData: Data, location: CLLocation?) async throws -> String {
-        if shouldThrowError {
-            throw GeminiError.notConfigured
-        }
-        return "Mock Description"
-    }
+
 }
 
 final class NarrativeTests: XCTestCase {

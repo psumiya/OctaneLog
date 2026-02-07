@@ -9,10 +9,5 @@ public protocol AIService {
     /// - Returns: The generated text string.
     func generateText(prompt: String) async throws -> String
     
-    /// Generates a description for an image (multimodal).
-    /// - Parameters:
-    ///   - imageData: The raw data of the image.
-    ///   - location: Optional location context.
-    /// - Returns: A textual description of the image.
-    func generateDescription(from imageData: Data, location: CLLocation?) async throws -> String
+
 }
