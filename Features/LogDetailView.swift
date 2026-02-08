@@ -20,12 +20,6 @@ struct LogDetailView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
-                } else {
-                    // Fallback Placeholder if no route data
-                    RoundedRectangle(cornerRadius: 12)
-                           .fill(Color.blue.opacity(0.1))
-                           .frame(height: 150)
-                           .overlay(Text("No Route Data Available").foregroundColor(.white.opacity(0.5)))
                 }
                 
                 // Transcript / Summary
