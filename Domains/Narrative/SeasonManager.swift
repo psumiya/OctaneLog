@@ -183,8 +183,9 @@ public struct Episode: Codable, Sendable, Identifiable {
     public let rawEvents: [String]?
     public let route: [RoutePoint]
     public var isProcessing: Bool
+    public var driveFolder: String? // UUID string of the folder in Documents/Drives/
     
-    public init(id: UUID, date: Date, title: String, summary: String, tags: [String], rawEvents: [String]? = nil, route: [RoutePoint] = [], isProcessing: Bool = false) {
+    public init(id: UUID, date: Date, title: String, summary: String, tags: [String], rawEvents: [String]? = nil, route: [RoutePoint] = [], isProcessing: Bool = false, driveFolder: String? = nil) {
         self.id = id
         self.date = date
         self.title = title
@@ -193,5 +194,6 @@ public struct Episode: Codable, Sendable, Identifiable {
         self.rawEvents = rawEvents
         self.route = route
         self.isProcessing = isProcessing
+        self.driveFolder = driveFolder
     }
 }

@@ -20,21 +20,21 @@ public struct OctaneSoulVerifier {
         let agent = NarrativeAgent(seasonManager: manager, geminiService: MockAIService(), dateProvider: { mockDate.date })
         
         // 1. Generate some episodes
-        print("   Step 1: Simulating drives throughout the year...")
-        _ = await agent.processDrive(events: ["Scenic drive on Highway 1"], route: [], videoClips: [])
-        
-        mockDate.date = formatter.date(from: "2026-06-15")!
-        _ = await agent.processDrive(events: ["Night drive in the city", "Heavy traffic"], route: [], videoClips: [])
-        
-        mockDate.date = formatter.date(from: "2026-11-20")!
-        _ = await agent.processDrive(events: ["Mountain pass", "Snowy conditions"], route: [], videoClips: [])
+        print("   Step 1: Process Drive (Ep 1)...")
+    _ = await agent.processDrive(events: ["Drive to Work", "Commute"], route: [], videoClips: [], driveID: nil)
+    
+    print("   Step 2: Process Drive (Ep 2)...")
+    _ = await agent.processDrive(events: ["Scenic Drive", "Mountains"], route: [], videoClips: [], driveID: nil)
+    
+    print("   Step 3: Process Drive (Ep 3)...")
+    _ = await agent.processDrive(events: ["Grocery Run", "Errands"], route: [], videoClips: [], driveID: nil)
         
         // 2. Fast forward to Dec 31st (Trigger Date)
         print("   Step 2: Jumping to Dec 31st...")
         mockDate.date = formatter.date(from: "2026-12-31")!
         
         // Trigger
-        _ = await agent.processDrive(events: ["Final drive of the year"], route: [], videoClips: [])
+        _ = await agent.processDrive(events: ["Final drive of the year"], route: [], videoClips: [], driveID: nil)
         
         // 3. Verify
         let season = await manager.loadSeason()

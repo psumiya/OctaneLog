@@ -233,19 +233,20 @@ public class DirectorService: NSObject {
         // print("Director: Event Logged -> \(description)")
     }
     
-    public func finishDrive() -> (events: [String], route: [RoutePoint], videoClips: [URL]) {
+    public func finishDrive() -> (events: [String], route: [RoutePoint], videoClips: [URL], driveID: String?) {
         self.logEvent("Drive ended at \(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium))")
         let capturedEvents = self.events
         let capturedRoute = self.currentRoute
         let clips = self.recordedClips
+        let finalDriveID = self.currentDriveID?.uuidString // Capture before nil
         
-        print("Director: Finishing drive - \(capturedEvents.count) events, \(capturedRoute.count) route points, \(clips.count) video clips")
+        print("Director: Finishing drive - \(capturedEvents.count) events, \(capturedRoute.count) route points, \(clips.count) video clips, ID: \(finalDriveID ?? "nil")")
         
         self.events.removeAll()
         self.currentRoute.removeAll()
         self.currentDriveID = nil
         
-        return (capturedEvents, capturedRoute, clips)
+        return (capturedEvents, capturedRoute, clips, finalDriveID)
     }
     
     /// Analyzes video clips using Vision framework to extract metadata

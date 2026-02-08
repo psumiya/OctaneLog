@@ -45,7 +45,7 @@ final class NarrativeRouteTests: XCTestCase {
             RoutePoint(latitude: 37.0, longitude: -122.0, timestamp: Date())
         ]
         
-        _ = await agent.processDrive(events: ["Drive Started"], route: route, videoClips: [])
+        _ = await agent.processDrive(events: ["Drive Started"], route: route, videoClips: [], driveID: nil)
         
         let season = await seasonManager.loadSeason()
         guard let savedEpisode = season.episodes.last else {

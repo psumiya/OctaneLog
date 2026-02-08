@@ -22,7 +22,7 @@ public actor NarrativeAgent {
     // Better approach: Let's assume GeminiService holds the key or we retrieve it from Keychain again.
     
     /// Processes a completed drive, updates the season arc, and generates an episode summary.
-    public func processDrive(events: [String], route: [RoutePoint], videoClips: [URL], visionAnalyses: [VisionAnalyzer.DriveAnalysis] = []) async -> String {
+    public func processDrive(events: [String], route: [RoutePoint], videoClips: [URL], driveID: String?, visionAnalyses: [VisionAnalyzer.DriveAnalysis] = []) async -> String {
         // Fallback for empty drives
         let driveEvents = events.isEmpty ? ["Drive started.", "Drive ended unexpectedly (No events)."] : events
         let hasVideo = !videoClips.isEmpty
@@ -41,11 +41,12 @@ public actor NarrativeAgent {
             tags: [AppConstants.Narrative.processingTag],
             rawEvents: driveEvents,
             route: route,
-            isProcessing: true
+            isProcessing: true,
+            driveFolder: driveID // Store the link!
         )
         season.episodes.append(pendingEpisode)
         await seasonManager.saveSeason(season)
-        ThoughtLogger.log(step: "Persistence", content: "Saved raw drive data. Starting AI generation (Video-Mode: \(hasVideo))...")
+        ThoughtLogger.log(step: "Persistence", content: "Saved raw drive data. DriveID: \(driveID ?? "nil"). Starting AI generation...")
         
         // 3. Draft Narrative (Simulated or Real Gemini Call)
         // This is the slow part where the user might exit.
@@ -77,6 +78,126 @@ public actor NarrativeAgent {
         await checkAndGenerateRecaps(season: currentSeason)
         
         return narrative
+    }
+    
+    // MARK: - Regeneration & Smart Match
+    
+    /// Re-generates the narrative for an existing episode using the latest prompt and models.
+    /// Attempts to find the video files via `manualDriveURL` (if provided), `driveFolder`, or "Smart Match" date heuristics.
+    public func regenerateNarrative(for episodeID: UUID, manualDriveURL: URL? = nil) async -> String {
+        // 1. Load Episode
+        var season = await seasonManager.loadSeason()
+        guard let index = season.episodes.firstIndex(where: { $0.id == episodeID }) else {
+            return "Error: Episode not found."
+        }
+        let episode = season.episodes[index]
+        
+        ThoughtLogger.log(step: "Regeneration", content: "Starting regeneration for '\(episode.title)'...")
+        
+        // 2. Determine Drive Folder
+        var clips: [URL] = []
+        var finalDriveID: String?
+        let fileManager = FileManager.default
+        let docsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let drivesURL = docsURL.appendingPathComponent("Drives")
+        
+        if let manualURL = manualDriveURL {
+             // MANUAL OVERRIDE
+             ThoughtLogger.log(step: "Regeneration", content: "Using manual folder: \(manualURL.path)")
+             
+             // Check if we can read it (Security Scoped?)
+             // The caller (View) should have started access, but we should be careful.
+             
+             do {
+                 let files = try fileManager.contentsOfDirectory(at: manualURL, includingPropertiesForKeys: nil)
+                 clips = files.filter { $0.pathExtension == "mov" }.sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
+                 
+                 // If successful, update the link!
+                 // We need to know if this folder is inside our app's Documents/Drives.
+                 // If it is, store the UUID. If it's outside (e.g. iCloud Drive), we might not be able to store a persistent ID easily without bookmarks.
+                 // For now, let's try to see if the folder name is a UUID and assumes it's one of ours.
+                 if let uuid = UUID(uuidString: manualURL.lastPathComponent) {
+                      finalDriveID = uuid.uuidString
+                 }
+             } catch {
+                 return "Error: Could not read manual folder. \(error.localizedDescription)"
+             }
+             
+        } else {
+            // AUTOMATIC / SMART MATCH
+            var driveID = episode.driveFolder
+            
+            // SMART MATCH LOGIC: If no ID, scan folders by date
+            if driveID == nil {
+                ThoughtLogger.log(step: "Smart Match", content: "No Drive ID linked. Scouring file system for matching folder...")
+                do {
+                    let driveFolders = try fileManager.contentsOfDirectory(at: drivesURL, includingPropertiesForKeys: [.creationDateKey], options: [.skipsHiddenFiles])
+                    
+                    for folder in driveFolders {
+                        if let attrs = try? fileManager.attributesOfItem(atPath: folder.path),
+                           let creationDate = attrs[.creationDate] as? Date {
+                            
+                            // Match within 2 minutes (120 seconds) tolerance
+                            if abs(creationDate.timeIntervalSince(episode.date)) < 120 {
+                                driveID = folder.lastPathComponent
+                                ThoughtLogger.log(step: "Smart Match", content: "✅ FOUND MATCH! Linked to folder: \(driveID!)")
+                                break
+                            }
+                        }
+                    }
+                } catch {
+                    ThoughtLogger.log(step: "Smart Match", content: "Failed to scan drives: \(error)")
+                }
+            }
+            
+            if let dID = driveID {
+                finalDriveID = dID
+                let driveDir = drivesURL.appendingPathComponent(dID)
+                do {
+                    let files = try fileManager.contentsOfDirectory(at: driveDir, includingPropertiesForKeys: nil)
+                    clips = files.filter { $0.pathExtension == "mov" }.sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
+                } catch {
+                    // fallthrough
+                }
+            }
+        }
+        
+        if clips.isEmpty {
+            return "Error: No video clips found. Please select a folder manually."
+        }
+        
+        // 3. Persist Link (if found)
+        if let foundID = finalDriveID, season.episodes[index].driveFolder != foundID {
+             season.episodes[index].driveFolder = foundID
+             await seasonManager.saveSeason(season)
+             ThoughtLogger.log(step: "Persistence", content: "Linked drive folder: \(foundID)")
+        }
+        
+        // 4. Generate
+        // We use stored events if available, or empty events
+        let events = episode.rawEvents ?? ["Drive regeneration."]
+        
+        // Mark as processing UI update
+        // Reload season to avoid conflicts
+        season = await seasonManager.loadSeason()
+        if let idx = season.episodes.firstIndex(where: { $0.id == episodeID }) {
+            season.episodes[idx].summary = "Regenerating with Gemini 3..."
+            season.episodes[idx].isProcessing = true
+            await seasonManager.saveSeason(season)
+        }
+        
+        let newNarrative = await generateVideoNarrative(clips: clips, events: events, season: season, visionAnalyses: [])
+        
+        // 5. Save Result
+        season = await seasonManager.loadSeason()
+        if let idx = season.episodes.firstIndex(where: { $0.id == episodeID }) {
+            season.episodes[idx].summary = newNarrative
+            season.episodes[idx].isProcessing = false
+            season.episodes[idx].tags = Array(Set(season.episodes[idx].tags + ["Remastered"])) // Add tag
+            await seasonManager.saveSeason(season)
+        }
+        
+        return newNarrative
     }
     
     private func generateVideoNarrative(clips: [URL], events: [String], season: SeasonArc, visionAnalyses: [VisionAnalyzer.DriveAnalysis]) async -> String {

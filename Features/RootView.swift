@@ -16,7 +16,7 @@ public struct RootView: View {
 
     public var body: some View {
         TabView {
-            CockpitView(director: director, aiService: aiService, onEndDrive: { events, route, clips in
+            CockpitView(director: director, aiService: aiService, onEndDrive: { events, route, clips, driveID in
                 Task {
                     print("🎬 Ending Drive with \(events.count) events, \(route.count) points, and \(clips.count) clips...")
                     
@@ -33,7 +33,7 @@ public struct RootView: View {
                     // Analyze videos locally with Vision framework first
                     let visionAnalyses = await director.analyzeVideoClips(clips)
                     
-                    let summary = await narrativeAgent.processDrive(events: events, route: route, videoClips: clips, visionAnalyses: visionAnalyses)
+                    let summary = await narrativeAgent.processDrive(events: events, route: route, videoClips: clips, driveID: driveID, visionAnalyses: visionAnalyses)
                     
                     await MainActor.run {
                         self.generatedNarrative = summary
@@ -68,7 +68,7 @@ public struct RootView: View {
                 Label("Cockpit", systemImage: "video.circle.fill")
             }
             
-            GarageView()
+            GarageView(narrativeAgent: narrativeAgent)
                 .tabItem {
                     Label("Garage", systemImage: "car.fill")
                 }

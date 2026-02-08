@@ -77,7 +77,7 @@ final class IntegrationTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(events.count, 3)
         
         // 4. Generate Narrative
-        let summary = await narrativeAgent.processDrive(events: events, route: [], videoClips: [])
+        let summary = await narrativeAgent.processDrive(events: events, route: [], videoClips: [], driveID: nil)
         
         // 5. Verification
         XCTAssertEqual(summary, "Integration Test Narrative Summary")

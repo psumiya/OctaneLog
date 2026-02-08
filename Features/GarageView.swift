@@ -40,8 +40,11 @@ class GarageViewModel {
 
 public struct GarageView: View {
     @State private var viewModel = GarageViewModel()
+    let narrativeAgent: NarrativeAgent
     
-    public init() {}
+    public init(narrativeAgent: NarrativeAgent) {
+        self.narrativeAgent = narrativeAgent
+    }
     
     var editButton: some View {
         Button(action: {
@@ -138,7 +141,7 @@ public struct GarageView: View {
                                                  viewModel.toggleSelection(for: episode.id)
                                             }
                                     } else {
-                                        NavigationLink(destination: LogDetailView(episode: episode)) {
+                                        NavigationLink(destination: LogDetailView(episode: episode, narrativeAgent: narrativeAgent)) {
                                             EpisodeRow(episode: episode)
                                         }
                                         .buttonStyle(PlainButtonStyle())
@@ -245,6 +248,11 @@ struct EpisodeRow: View {
 
 struct GarageView_Previews: PreviewProvider {
     static var previews: some View {
-        GarageView()
+        GarageView(narrativeAgent: NarrativeAgent(geminiService: PreviewMockAIService()))
     }
+}
+
+fileprivate struct PreviewMockAIService: AIService {
+    func generateText(prompt: String) async throws -> String { return "Mock Text" }
+    func generateImage(prompt: String) async throws -> Data { return Data() }
 }

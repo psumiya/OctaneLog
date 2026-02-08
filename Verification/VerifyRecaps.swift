@@ -44,14 +44,14 @@ public struct RecapVerifier {
         let agent = NarrativeAgent(seasonManager: manager, geminiService: MockAIService(), dateProvider: { mockDate.date })
         
         print("   Step 1: Process Drive on Jan 1st...")
-        _ = await agent.processDrive(events: ["Drive 1"], route: [], videoClips: [])
+        _ = await agent.processDrive(events: ["Drive 1"], route: [], videoClips: [], driveID: nil)
         
         var season = await manager.loadSeason()
         assert(season.recaps.isEmpty, "Starting state incorrect: Should be no recaps.")
         
         print("   Step 2: Fast forward to Jan 8th (Weekly Trigger)...")
         mockDate.date = formatter.date(from: "2026-01-08")!
-        _ = await agent.processDrive(events: ["Drive 2"], route: [], videoClips: [])
+        _ = await agent.processDrive(events: ["Drive 2"], route: [], videoClips: [], driveID: nil)
         
         season = await manager.loadSeason()
         if season.recaps.count == 1 && season.recaps.first?.periodType == "Weekly" {
@@ -62,7 +62,7 @@ public struct RecapVerifier {
         
         print("   Step 3: Fast forward to Jan 31st (Monthly Trigger)...")
         mockDate.date = formatter.date(from: "2026-01-31")!
-        _ = await agent.processDrive(events: ["Drive EOM"], route: [], videoClips: [])
+        _ = await agent.processDrive(events: ["Drive EOM"], route: [], videoClips: [], driveID: nil)
         
         season = await manager.loadSeason()
         if season.recaps.contains(where: { $0.periodType == "Monthly" }) {
