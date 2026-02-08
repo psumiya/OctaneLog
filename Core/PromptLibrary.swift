@@ -63,4 +63,26 @@ public struct PromptLibrary {
         }
         """
     }
+
+    /// Analyzes the recent episodes to determine the overarching theme of the season.
+    public static func analyzeSeasonTheme(episodes: [Episode]) -> String {
+        let episodeLog = episodes.map { "- \($0.date.formatted(date: .numeric, time: .omitted)): \($0.summary)" }.joined(separator: "\n")
+        
+        return """
+        You are the Director of the 'OctaneLog' series.
+        Analyze the recent episodes to identify the current Season Theme.
+        
+        Source Material:
+        \(episodeLog)
+        
+        Task: Determine the current Season Theme, Title, and Saga Narrative based on the narrative arc so far.
+        
+        Return ONLY a raw JSON object (no markdown formatting) with this structure:
+        {
+            "theme": "One Word Theme", // e.g. "Discovery", "Velocity", "Solitude", "Urban"
+            "title": "Season Title",   // e.g. "Season 1: The Concrete Jungle", "Season 2: Into the Wild"
+            "sagaNarrative": "Two paragraphs summarizing the season's journey so far. Focus on the emotional arc, key recurring locations, and the evolution of the driving style. Make it sound epic and cinematic."
+        }
+        """
+    }
 }

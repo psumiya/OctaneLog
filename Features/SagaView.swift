@@ -26,6 +26,14 @@ public struct SagaView: View {
                         .padding(.top)
                         .padding(.horizontal)
                         
+                        if let narrative = season.sagaNarrative {
+                            Text(narrative)
+                                .font(.body)
+                                .foregroundColor(.white.opacity(0.8))
+                                .multilineTextAlignment(.leading)
+                                .padding(.horizontal)
+                        }
+                        
                         Divider().background(Color.gray.opacity(0.3))
                         
                         // Mixed Timeline: Recaps + OctaneSouls

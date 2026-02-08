@@ -4,6 +4,8 @@ import SwiftUI
 class GarageViewModel {
     var season: SeasonArc?
     var isLoading = false
+    var statusMessage: String = "Loading..."
+    var showSagaView = false // For programmatic navigation
     
     // Selection Mode State
     var isSelectionMode = false
@@ -11,10 +13,15 @@ class GarageViewModel {
     
     func loadSeason() async {
         print("GarageViewModel: Start Loading Season...")
-        self.isLoading = true
+        // If we are already loading, maybe we don't need to check again? 
+        // But for safety, let's keep it simple.
+        // We set isLoading = true only if we want to show the spinner. 
+        // But if called from onAppear, we might want to be silent if data exists?
+        // For now, consistent spinner.
+        self.isLoading = true 
+        self.statusMessage = "Loading Season..."
         self.season = await SeasonManager.shared.loadSeason()
         self.isLoading = false
-        print("GarageViewModel: Finished Loading Season. Season is nil? \(self.season == nil)")
     }
     
     func deleteEpisode(id: UUID) async {
@@ -36,10 +43,20 @@ class GarageViewModel {
             selectedEpisodeIds.insert(id)
         }
     }
+    
+    func analyzeSeason(agent: NarrativeAgent) async -> String {
+        self.isLoading = true
+        self.statusMessage = "Submitting episodes to Gemini for analysis...\nHang on, this may take a while."
+        let result = await agent.analyzeCurrentSeason()
+        await loadSeason() // Reload to get new theme/title
+        self.isLoading = false
+        return result
+    }
 }
 
 public struct GarageView: View {
     @State private var viewModel = GarageViewModel()
+    
     let narrativeAgent: NarrativeAgent
     
     public init(narrativeAgent: NarrativeAgent) {
@@ -62,7 +79,16 @@ public struct GarageView: View {
                 Color.black.edgesIgnoringSafeArea(.all)
                 
                 if viewModel.isLoading {
-                    ProgressView()
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .red))
+                        Text(viewModel.statusMessage)
+                            .foregroundColor(.white)
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    }
                 } else if let season = viewModel.season {
                     VStack(alignment: .leading) {
                         // Header
@@ -78,7 +104,24 @@ public struct GarageView: View {
                             }
                             Spacer()
                             HStack {
-                                NavigationLink(destination: SagaView()) {
+                                Menu {
+                                    Button(action: {
+                                        viewModel.showSagaView = true
+                                    }) {
+                                        Label("View Saga", systemImage: "book")
+                                    }
+                                    
+                                    Button(action: {
+                                        Task {
+                                            // 1. Analyze
+                                            let _ = await viewModel.analyzeSeason(agent: narrativeAgent)
+                                            // 2. Auto-Navigate to Saga
+                                            viewModel.showSagaView = true
+                                        }
+                                    }) {
+                                        Label("Analyze Season Theme", systemImage: "wand.and.stars")
+                                    }
+                                } label: {
                                     Text("Saga")
                                         .fontWeight(.bold)
                                         .foregroundColor(.white)
@@ -87,6 +130,10 @@ public struct GarageView: View {
                                         .background(Color.red)
                                         .cornerRadius(8)
                                 }
+                                .background(
+                                    NavigationLink(isActive: $viewModel.showSagaView, destination: { SagaView() }, label: { EmptyView() })
+                                )
+                                
                                 editButton
                             }
                         }
@@ -192,8 +239,12 @@ public struct GarageView: View {
                 }
             }
             .onAppear {
+                // Fix infinite loading: Only load if we don't have a season or if explicitly requested.
+                // But for now, just load it, but make sure isLoading is handled in loadSeason.
                 Task {
+                    viewModel.isLoading = true 
                     await viewModel.loadSeason()
+                     // Force isLoading off after valid load, handled in viewModel.loadSeason but ensuring here too if needed
                 }
             }
             #if os(iOS)

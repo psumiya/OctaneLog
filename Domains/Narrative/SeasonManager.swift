@@ -118,6 +118,7 @@ public struct SeasonArc: Codable, Sendable {
     public let id: UUID
     public var title: String
     public var theme: String
+    public var sagaNarrative: String? // AI-generated summary of the season so far
     public var episodes: [Episode]
     public var recurringCharacters: [String] // e.g., "The Coffee Shop", "Old 66 Highway"
     
@@ -130,10 +131,13 @@ public struct SeasonArc: Codable, Sendable {
     // OctaneSoul (Yearly Odyssey)
     public var octaneSouls: [OctaneSoulReport]
     
-    public init(id: UUID, title: String, theme: String, episodes: [Episode], recurringCharacters: [String], recaps: [Recap] = [], lastWeeklyRecapDate: Date? = nil, lastMonthlyRecapDate: Date? = nil, lastYearlyRecapDate: Date? = nil, octaneSouls: [OctaneSoulReport] = []) {
+
+    
+    public init(id: UUID, title: String, theme: String, sagaNarrative: String? = nil, episodes: [Episode], recurringCharacters: [String], recaps: [Recap] = [], lastWeeklyRecapDate: Date? = nil, lastMonthlyRecapDate: Date? = nil, lastYearlyRecapDate: Date? = nil, octaneSouls: [OctaneSoulReport] = []) {
         self.id = id
         self.title = title
         self.theme = theme
+        self.sagaNarrative = sagaNarrative
         self.episodes = episodes
         self.recurringCharacters = recurringCharacters
         self.recaps = recaps
@@ -149,6 +153,7 @@ public struct SeasonArc: Codable, Sendable {
         self.id = try container.decode(UUID.self, forKey: .id)
         self.title = try container.decode(String.self, forKey: .title)
         self.theme = try container.decode(String.self, forKey: .theme)
+        self.sagaNarrative = try container.decodeIfPresent(String.self, forKey: .sagaNarrative)
         self.episodes = try container.decode([Episode].self, forKey: .episodes)
         self.recurringCharacters = try container.decode([String].self, forKey: .recurringCharacters)
         

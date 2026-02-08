@@ -200,6 +200,58 @@ public actor NarrativeAgent {
         return newNarrative
     }
     
+    // MARK: - Season Analysis
+    
+    /// Analyzes the current season's episodes to determine the overarching theme and title.
+    /// Updates the SeasonArc with the new metadata.
+    public func analyzeCurrentSeason() async -> String {
+        var season = await seasonManager.loadSeason()
+        
+        // 1. Gather Context
+        // We use all episodes, or maybe the last 20 if it's too long.
+        let episodes = season.episodes.suffix(20)
+        
+        if episodes.isEmpty {
+             return "Not enough episodes to analyze."
+        }
+        
+        ThoughtLogger.log(step: "Season Analysis", content: "Analyzing \(episodes.count) episodes for season theme...")
+        
+        // 2. Generate
+        let prompt = PromptLibrary.analyzeSeasonTheme(episodes: Array(episodes))
+        ThoughtLogger.log(step: "Season Prompt", content: "Prompt sent to Gemini:\n\(prompt)")
+        
+        do {
+            let jsonString = try await geminiService.generateText(prompt: prompt)
+            
+            // Clean markdown fences if present
+            let cleanedJSON = jsonString.replacingOccurrences(of: "```json", with: "").replacingOccurrences(of: "```", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if let data = cleanedJSON.data(using: .utf8),
+               let json = try JSONSerialization.jsonObject(with: data) as? [String: String] {
+                
+                if let newTheme = json["theme"] {
+                    season.theme = newTheme
+                }
+                if let newTitle = json["title"] {
+                    season.title = newTitle
+                }
+                if let newNarrative = json["sagaNarrative"] {
+                    season.sagaNarrative = newNarrative
+                }
+                
+                await seasonManager.saveSeason(season)
+                ThoughtLogger.log(step: "Season Update", content: "Theme: \(season.theme)\nTitle: \(season.title)\nNarrative Length: \(season.sagaNarrative?.count ?? 0) chars")
+                return "Season updated: \(season.title) (\(season.theme))"
+            } else {
+                return "Error: Could not parse AI response."
+            }
+        } catch {
+            ThoughtLogger.logDecision(topic: "Season Analysis Failure", decision: "Abort", reasoning: "\(error)")
+            return "Error analyzing season: \(error.localizedDescription)"
+        }
+    }
+    
     private func generateVideoNarrative(clips: [URL], events: [String], season: SeasonArc, visionAnalyses: [VisionAnalyzer.DriveAnalysis]) async -> String {
         // 1. Authenticate (Get Key)
         guard let apiKey = KeychainHelper.standard.read(service: "com.octanelog.api.key", account: "gemini_api_key_v1")

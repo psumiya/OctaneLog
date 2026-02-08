@@ -40,13 +40,14 @@ let package = Package(
             name: "Verification",
             dependencies: ["OctaneLogCore"],
             path: "Verification",
-            exclude: ["VerifyGemini3Video.swift"] 
+            exclude: ["VerifyGemini3Video.swift", "VerifySeasonAnalysis.swift"] 
         ),
         .executableTarget(
             name: "VerifyGemini3Video",
             dependencies: ["OctaneLogCore"],
             path: "Verification",
             sources: ["VerifyGemini3Video.swift"]
-        )
+        ),
+
     ]
 )
