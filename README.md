@@ -75,7 +75,7 @@ Since `OctaneLog` is a Swift Package Logic Library, we include a "Host App" call
     -   Hit Play (Command + R).
     -   Xcode will automatically handle the signing (ensure a Team is selected in the project settings if prompted).
 
-> **Note**: Audio recording is disabled by default for privacy. Video is analyzed but only uploaded if you configure your API key.
+> **Note**: This is a video-only application. Audio recording is not implemented and microphone access is not requested.
 
 ### Troubleshooting
 

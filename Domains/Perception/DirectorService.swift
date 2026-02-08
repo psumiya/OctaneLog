@@ -46,7 +46,7 @@ public class DirectorService: NSObject {
             }
         }
         
-        // Audio Input Removed per user request.
+        
         
         // Add Movie Output
         if captureSession.canAddOutput(movieOutput) {
