@@ -13,73 +13,80 @@ public struct RootView: View {
     
     @State private var generatedNarrative: String?
     @State private var showSummary = false
+    @AppStorage("hasAcceptedSafetyDisclaimer") private var hasAcceptedSafetyDisclaimer = false
 
     public var body: some View {
-        TabView {
-            CockpitView(director: director, aiService: aiService, onEndDrive: { events, route, clips, driveID in
-                Task {
-                    print("🎬 Ending Drive with \(events.count) events, \(route.count) points, and \(clips.count) clips...")
-                    
-                    #if os(iOS)
-                    // Request extra time from the system to complete AI generation
-                    var taskID = UIBackgroundTaskIdentifier.invalid
-                    taskID = UIApplication.shared.beginBackgroundTask {
-                        // Expiration handler: Force end if time runs out
-                        UIApplication.shared.endBackgroundTask(taskID)
-                        taskID = .invalid
-                    }
-                    #endif
-                    
-                    // Analyze videos locally with Vision framework first
-                    let visionAnalyses = await director.analyzeVideoClips(clips)
-                    
-                    let summary = await narrativeAgent.processDrive(events: events, route: route, videoClips: clips, driveID: driveID, visionAnalyses: visionAnalyses)
-                    
-                    await MainActor.run {
-                        self.generatedNarrative = summary
-                        self.showSummary = true
-                        
-                        #if os(iOS)
-                        // End the background task
-                        UIApplication.shared.endBackgroundTask(taskID)
-                        taskID = .invalid
-                        #endif
-                    }
-                }
-            })
-            .sheet(isPresented: $showSummary) {
-                if let summary = generatedNarrative {
-                    NarrativeSummaryView(summary: summary)
-                } else {
-                    // Fallback if sheet is presented but data isn't ready (shouldn't happen, but safe)
-                    ZStack {
-                        Color.black.edgesIgnoringSafeArea(.all)
-                        VStack {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            Text("Loading Summary...")
-                                .foregroundColor(.white)
-                                .padding(.top)
+        ZStack {
+            if !hasAcceptedSafetyDisclaimer {
+                SafetyDisclaimerView(hasAccepted: $hasAcceptedSafetyDisclaimer)
+            } else {
+                TabView {
+                    CockpitView(director: director, aiService: aiService, onEndDrive: { events, route, clips, driveID in
+                        Task {
+                            print("🎬 Ending Drive with \(events.count) events, \(route.count) points, and \(clips.count) clips...")
+                            
+                            #if os(iOS)
+                            // Request extra time from the system to complete AI generation
+                            var taskID = UIBackgroundTaskIdentifier.invalid
+                            taskID = UIApplication.shared.beginBackgroundTask {
+                                // Expiration handler: Force end if time runs out
+                                UIApplication.shared.endBackgroundTask(taskID)
+                                taskID = .invalid
+                            }
+                            #endif
+                            
+                            // Analyze videos locally with Vision framework first
+                            let visionAnalyses = await director.analyzeVideoClips(clips)
+                            
+                            let summary = await narrativeAgent.processDrive(events: events, route: route, videoClips: clips, driveID: driveID, visionAnalyses: visionAnalyses)
+                            
+                            await MainActor.run {
+                                self.generatedNarrative = summary
+                                self.showSummary = true
+                                
+                                #if os(iOS)
+                                // End the background task
+                                UIApplication.shared.endBackgroundTask(taskID)
+                                taskID = .invalid
+                                #endif
+                            }
+                        }
+                    })
+                    .sheet(isPresented: $showSummary) {
+                        if let summary = generatedNarrative {
+                            NarrativeSummaryView(summary: summary)
+                        } else {
+                            // Fallback if sheet is presented but data isn't ready (shouldn't happen, but safe)
+                            ZStack {
+                                Color.black.edgesIgnoringSafeArea(.all)
+                                VStack {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    Text("Loading Summary...")
+                                        .foregroundColor(.white)
+                                        .padding(.top)
+                                }
+                            }
                         }
                     }
+                    .tabItem {
+                        Label("Cockpit", systemImage: "video.circle.fill")
+                    }
+                    
+                    GarageView(narrativeAgent: narrativeAgent)
+                        .tabItem {
+                            Label("Garage", systemImage: "car.fill")
+                        }
+                    
+                    SettingsView()
+                        .tabItem {
+                            Label("Settings", systemImage: "gearshape.fill")
+                        }
                 }
+                .accentColor(.red) // Branding color
+                .preferredColorScheme(.dark)
             }
-            .tabItem {
-                Label("Cockpit", systemImage: "video.circle.fill")
-            }
-            
-            GarageView(narrativeAgent: narrativeAgent)
-                .tabItem {
-                    Label("Garage", systemImage: "car.fill")
-                }
-            
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
         }
-        .accentColor(.red) // Branding color
-        .preferredColorScheme(.dark)
     }
 }
 

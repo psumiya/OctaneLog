@@ -98,6 +98,13 @@ public struct SettingsView: View {
                 }
                 
                 Section(header: Text("About")) {
+                    NavigationLink(destination: ScrollView {
+                        Text(LegalText.disclaimer)
+                            .padding()
+                    }.navigationTitle("Safety & Legal")) {
+                        Text("Safety & Legal Disclaimer")
+                    }
+                    
                     Link("Get a Gemini API Key", destination: URL(string: "https://aistudio.google.com/app/apikey")!)
                     Text("Version 1.0.0")
                 }

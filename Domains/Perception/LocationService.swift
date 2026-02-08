@@ -72,7 +72,7 @@ extension LocationService: CLLocationManagerDelegate {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             self.isAuthorized = true
-            self.startMonitoring()
+            // self.startMonitoring() // Removed: Do not auto-start. Director must request it.
         case .denied, .restricted:
             self.isAuthorized = false
             self.stopMonitoring()
