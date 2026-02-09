@@ -9,11 +9,16 @@
 
 - **The Director**: Continuously records your drive and uses Apple's Vision framework to analyze scenery, lighting, and objects in real-time.
 - **The Editor (Gemini 3)**: Combines video footage with local Vision analysis to generate vivid narrative summaries of your drives.
+  - **Gemini 3 Flash**: Analyzes driving footage for visual storytelling.
+  - **Gemini 3 Pro**: Manages the "Season Arc" and deep reasoning tasks.
 - **Smart Processing**: Intelligently uploads driving footage to Gemini when local Vision analysis detects significant events or scenery, ensuring high-quality narration.
 
 ## Architecture
 - **Perception Domain**: Hardware-abstracted Camera logic (`VideoSourceProtocol`) & Real-time AI analysis.
 - **Narrative Domain**: Generative text synthesis and data persistence (`SeasonManager`).
+- **AI Models**:
+    - **Gemini 3 Flash** (`gemini-3-flash-preview`): High-frequency video analysis and fast narrative generation.
+    - **Gemini 3 Pro** (`gemini-3-pro-preview`): Complex reasoning, thematic alignment, and season-long memory management.
 
 ## Privacy & Data Safety
 
