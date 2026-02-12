@@ -11,7 +11,7 @@
 - **The Editor (Gemini 3)**: Combines video footage with local Vision analysis to generate vivid narrative summaries of your drives.
   - **Gemini 3 Flash**: Analyzes driving footage for visual storytelling.
   - **Gemini 3 Pro**: Manages the "Season Arc" and deep reasoning tasks.
-- **Smart Processing**: Intelligently uploads driving footage to Gemini when local Vision analysis detects significant events or scenery, ensuring high-quality narration.
+- **Smart Processing**: Uses on-device Vision framework to extract metadata (objects, lighting, scenery) from video clips. This metadata allows Gemini 3 to "see" the drive even before processing the video frames, ensuring high-quality narration.
 
 ## Architecture
 - **Perception Domain**: Hardware-abstracted Camera logic (`VideoSourceProtocol`) & Real-time AI analysis.
@@ -25,7 +25,7 @@
 OctaneLog is designed to be **Privacy Aware**.
 
 - **Bring Your Own Key (BYOK)**: *Default Configuration*. Currently, you use your own Google Gemini API Key. Your data is processed under your personal or enterprise agreement with Google.
-- **Smart Redaction**: The "Director" agent is explicitly prompted to **ignore** license plates, faces, and specific street numbers, focusing strictly on vehicle types, scenery, and driving dynamics.
+- **Generative Redaction**: While raw video is processed for the narrative, the AI Narrator is explicitly prompted to **ignore** license plates, faces, and specific street numbers, focusing strictly on vehicle types, scenery, and driving dynamics in the output text.
 - **Local Narrative & Data**: Location coordinates are sent to Gemini *only* for context (e.g., to identify "Golden Gate Bridge" vs "A Red Bridge"). The raw GPS history (Route) and the generated text stories (the "Saga") are saved locally on your device. You own your data.
 - **Background Autonomy**: The app requires "Always" location permission to autonomously detect and log drives even when the phone is locked. This telemetry is processed locally to determine drive state (Stationary vs Cruising) and is never uploaded to a cloud server.
 
@@ -47,7 +47,9 @@ OctaneLog is designed to be **Privacy Aware**.
 
 ### Setup
 1. Open `Package.swift` in Xcode.
-2. Configure `GEMINI_API_KEY` in `GeminiService.swift` or environment.
+2. **API Key**: 
+   - **Method A (Quick)**: Open `Domains/Perception/GeminiService.swift` and set the `private var apiKey` property.
+   - **Method B (Secure)**: Build and run the app. Go to the **Settings** tab and paste your API Key.
 3. Run `swift build` or build the `OctaneLogCore` scheme in Xcode.
 
 ## How to Test and Run
